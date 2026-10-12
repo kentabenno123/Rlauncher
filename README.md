@@ -2,70 +2,70 @@
 
 # RLauncher
 
-Minimaler Android-Launcher – ein Fork von [Olauncher](https://github.com/tanujnotes/Olauncher), fast unverändert.
-Neu ist genau eine Funktion: **Links als Einträge in der App-Liste**, die sich wie Apps verhalten.
+A minimal Android launcher. It is a fork of [Olauncher](https://github.com/tanujnotes/Olauncher) and stays very close to it.
+The main addition: **web links appear in the app list and behave like apps.**
 
-## Links (Web-Verknüpfungen)
+## Links (web shortcuts)
 
-Ein Link ist ein Eintrag in der App-Liste, der eine Webseite im Standardbrowser (z. B. Firefox) öffnet.
-Er sieht aus wie eine App und lässt sich genauso benutzen: antippen, umbenennen, löschen, auf die Startseite legen oder einer Wischgeste zuweisen.
+A link is an entry in the app list that opens a web page in your default browser (e.g. Firefox).
+It looks like an app and works like one: tap it, rename it, delete it, put it on the home screen or assign it to a swipe gesture.
 
-### Link anlegen
+### Add a link
 
-1. Auf der Startseite lange drücken → **Einstellungen**.
-2. Ganz oben **Link hinzufügen** antippen.
-3. **Name** eingeben (z. B. `Wikipedia`) und **URL** (z. B. `wikipedia.org`) → **OK**.
+1. Long-press the home screen → **Settings**.
+2. Tap **Add link** at the top.
+3. Enter a **Name** (e.g. `Wikipedia`) and a **URL** (e.g. `wikipedia.org`), then tap **OK**.
 
-Der Link erscheint sofort in der App-Liste.
+The link shows up in the app list right away.
 
-- `https://` ist optional – bei `wikipedia.org` wird es automatisch ergänzt. `http://` bleibt erhalten, wenn du es angibst.
-- Bleibt der Name leer, wird die Domain verwendet (`wikipedia.org`).
-- Alternativ: In der App-Suche eine URL tippen und **Enter** drücken. Weil die Suche eine App automatisch öffnet, sobald nur noch ein Treffer übrig ist, klappt das nicht bei jeder URL – der Weg über die Einstellungen funktioniert immer.
+- `https://` is optional. For `wikipedia.org` it is added automatically. If you type `http://` yourself, it is kept.
+- If you leave the name empty, the domain is used (`wikipedia.org`).
+- You can also type a URL into the app search and press **Enter**. This doesn't work for every URL: the search opens an app automatically as soon as only one app matches what you've typed. Adding links through Settings always works.
 
-### Link benutzen und ändern
+### Use and edit a link
 
-| Aktion | So geht's |
+| Action | How |
 |---|---|
-| Öffnen | Eintrag in der App-Liste antippen → öffnet im Standardbrowser |
-| URL ändern | Eintrag lange drücken → **URL** |
-| Umbenennen | Eintrag lange drücken → **Umbenennen** |
-| Löschen | Eintrag lange drücken → **Löschen** |
-| Auf die Startseite | Auf der Startseite lange auf einen Platz drücken → Link aus der Liste wählen |
-| Wischgeste | Einstellungen → Wischen nach links/rechts → Link wählen |
+| Open | Tap the entry in the app list. It opens in your default browser. |
+| Change the URL | Long-press the entry → **URL** |
+| Rename | Long-press the entry → **Rename** |
+| Delete | Long-press the entry → **Uninstall** |
+| Put on the home screen | Long-press a slot on the home screen → pick the link from the list |
+| Swipe gesture | Settings → **Swipe left app** / **Swipe right app** → pick the link |
 
-### Voraussetzungen
+### Requirements
 
-- **RLauncher muss Standard-Launcher sein.** Nur der Standard-Launcher darf Verknüpfungen anlegen; sonst erscheint „Verknüpfung konnte nicht hinzugefügt werden“.
-- Android 8.0 oder neuer.
+- **RLauncher must be your default launcher.** Only the default launcher can create shortcuts. Otherwise you'll see "Could not add shortcut".
+- Android 8.0 or newer.
 
-### Wie es technisch funktioniert
+### How it works
 
-Links werden als angeheftete Android-Shortcuts von RLauncher selbst gespeichert (`Intent.ACTION_VIEW` mit der URL).
-Dadurch nutzen sie die vorhandene Shortcut-Logik von Olauncher für Liste, Start, Umbenennen, Löschen und Startseite.
-Wird RLauncher deinstalliert, sind die Links weg.
+Links are stored as pinned Android shortcuts owned by RLauncher (`Intent.ACTION_VIEW` with the URL).
+This way they reuse Olauncher's existing shortcut handling for listing, launching, renaming, deleting and the home screen.
+Uninstalling RLauncher removes all links.
 
-## Unterschiede zu Olauncher
+## Differences from Olauncher
 
-- Links in der App-Liste (siehe oben)
-- App-ID `app.rlauncher` – läuft parallel zu einem installierten Olauncher
-- Name RLauncher in der App
-- Option „Apps: Größere Klick-Fläche“ (Einstellungen → Startbildschirm, aus Olauncher CF übernommen): die ganze Zeile eines Startseiten-Eintrags ist antippbar, nicht nur der Text
-- Keine Werbe- und Erinnerungs-Popups (Pro-Version, Bewertung, Teilen, Hintergründe, Neujahrsgrüße) und keine Werbezeile für andere Apps
+- Links in the app list (see above)
+- App ID `app.rlauncher`, so it can be installed alongside Olauncher
+- The app is called RLauncher
+- **Apps: larger tap area** option (Settings → Home screen, taken from Olauncher CF). When it's on, you can tap anywhere in a home screen entry's row, not just on its label.
+- No promotional or reminder popups (Pro version, rating, sharing, wallpapers, New Year greetings) and no ads for other apps in Settings
 
 ## Installation
 
-Es gibt keine Store-Version. APK selbst bauen (JDK 17 und Android SDK nötig):
+There is no store release. Build the APK yourself (requires JDK 17 and the Android SDK):
 
 ```sh
 ./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Ohne Kabel: `app-debug.apk` aufs Handy kopieren, antippen und „Unbekannte Apps installieren“ erlauben.
-Danach unter **Einstellungen → Apps → Standard-Apps → Startbildschirm-App** RLauncher wählen.
+Without a cable: copy `app-debug.apk` to your phone, tap it and allow "Install unknown apps".
+Then choose RLauncher under **Settings → Apps → Default apps → Home app**.
 
-## Credits & Lizenz
+## Credits & License
 
-RLauncher basiert auf [Olauncher](https://github.com/tanujnotes/Olauncher) von [tanujnotes](https://github.com/tanujnotes) – alle übrigen Funktionen und das Design stammen von dort.
+RLauncher is based on [Olauncher](https://github.com/tanujnotes/Olauncher) by [tanujnotes](https://github.com/tanujnotes). All other features and the design come from there.
 
-Lizenz: [GNU GPLv3](LICENSE)
+License: [GNU GPLv3](LICENSE)
