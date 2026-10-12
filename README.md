@@ -1,47 +1,70 @@
-![Olauncher](https://repository-images.githubusercontent.com/278638069/db0acb80-661b-11eb-803e-926cae5dccb4)
+![RLauncher](docs/header.svg)
 
+# RLauncher
 
-# Olauncher | Minimal AF Launcher
-AF stands for Ad-Free! :D
+Minimaler Android-Launcher – ein Fork von [Olauncher](https://github.com/tanujnotes/Olauncher), fast unverändert.
+Neu ist genau eine Funktion: **Links als Einträge in der App-Liste**, die sich wie Apps verhalten.
 
-[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-    alt="Get it on Play Store"
-    height="80" align="middle">](https://play.google.com/store/apps/details?id=app.olauncher)
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-    alt="Get it on F-Droid"
-    height="80" align="middle">](https://f-droid.org/packages/app.olauncher)
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder_nofont.png"
-    alt="Get it on IzzyOnDroid"
-    height="54" hspace="13" align="middle">](https://apt.izzysoft.de/packages/app.olauncher)
+## Links (Web-Verknüpfungen)
 
-### Install using [Play Store](https://play.google.com/store/apps/details?id=app.olauncher), [F-Droid](https://f-droid.org/packages/app.olauncher), [IzzyOnDroid](https://apt.izzysoft.de/packages/app.olauncher) or the [latest APK](https://github.com/tanujnotes/Olauncher/releases/).
+Ein Link ist ein Eintrag in der App-Liste, der eine Webseite im Standardbrowser (z. B. Firefox) öffnet.
+Er sieht aus wie eine App und lässt sich genauso benutzen: antippen, umbenennen, löschen, auf die Startseite legen oder einer Wischgeste zuweisen.
 
-- To maintain the simplicity of the launcher, a few niche features are available but hidden.
+### Link anlegen
 
-- Please check out the **[About](https://tanujnotes.substack.com/p/olauncher-minimal-af-launcher?utm_source=github)** page in the Olauncher settings for a complete list of features and **FAQs**.
+1. Auf der Startseite lange drücken → **Einstellungen**.
+2. Ganz oben **Link hinzufügen** antippen.
+3. **Name** eingeben (z. B. `Wikipedia`) und **URL** (z. B. `wikipedia.org`) → **OK**.
 
-##
+Der Link erscheint sofort in der App-Liste.
 
-License: [GNU GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+- `https://` ist optional – bei `wikipedia.org` wird es automatisch ergänzt. `http://` bleibt erhalten, wenn du es angibst.
+- Bleibt der Name leer, wird die Domain verwendet (`wikipedia.org`).
+- Alternativ: In der App-Suche eine URL tippen und **Enter** drücken. Weil die Suche eine App automatisch öffnet, sobald nur noch ein Treffer übrig ist, klappt das nicht bei jeder URL – der Weg über die Einstellungen funktioniert immer.
 
-Contact: [X/Twitter](https://x.com/tanujnotes) • [Reddit](https://reddit.com/user/tanujnotes/) • [Bluesky](https://bsky.app/profile/tanujnotes.bsky.social)
+### Link benutzen und ändern
 
-##
+| Aktion | So geht's |
+|---|---|
+| Öffnen | Eintrag in der App-Liste antippen → öffnet im Standardbrowser |
+| URL ändern | Eintrag lange drücken → **URL** |
+| Umbenennen | Eintrag lange drücken → **Umbenennen** |
+| Löschen | Eintrag lange drücken → **Löschen** |
+| Auf die Startseite | Auf der Startseite lange auf einen Platz drücken → Link aus der Liste wählen |
+| Wischgeste | Einstellungen → Wischen nach links/rechts → Link wählen |
 
-### My other apps:
+### Voraussetzungen
 
-- [Pro Launcher](https://play.google.com/store/apps/details?id=app.prolauncher) - Pro version of Olauncher with extra features like widgets, weather, folders, etc.
+- **RLauncher muss Standard-Launcher sein.** Nur der Standard-Launcher darf Verknüpfungen anlegen; sonst erscheint „Verknüpfung konnte nicht hinzugefügt werden“.
+- Android 8.0 oder neuer.
 
-- [Note to Self](https://play.google.com/store/apps/details?id=com.makenotetoself) - Free and [open source](https://github.com/jeerovan/ntsapp) notes app with chat like interface and end-to-end encryption.
+### Wie es technisch funktioniert
 
-- [Pentastic](https://play.google.com/store/apps/details?id=app.pentastic) - Minimal todo lists. Free and [open source](https://github.com/tanujnotes/Pentastic).
+Links werden als angeheftete Android-Shortcuts von RLauncher selbst gespeichert (`Intent.ACTION_VIEW` mit der URL).
+Dadurch nutzen sie die vorhandene Shortcut-Logik von Olauncher für Liste, Start, Umbenennen, Löschen und Startseite.
+Wird RLauncher deinstalliert, sind die Links weg.
 
-##
+## Unterschiede zu Olauncher
 
-### Help me get a new phone for testing:
+- Links in der App-Liste (siehe oben)
+- App-ID `app.rlauncher` – läuft parallel zu einem installierten Olauncher
+- Name RLauncher in der App
+- Kein Werbe-Dialog für die Pro-Version
 
-[<img src="https://img.buymeacoffee.com/button-api/?emoji=&slug=tanujnotes&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"
-    alt="Get it on Play Store"
-    height="80">](https://www.buymeacoffee.com/tanujnotes)
+## Installation
 
-Thank you!
+Es gibt keine Store-Version. APK selbst bauen (JDK 17 und Android SDK nötig):
+
+```sh
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+Ohne Kabel: `app-debug.apk` aufs Handy kopieren, antippen und „Unbekannte Apps installieren“ erlauben.
+Danach unter **Einstellungen → Apps → Standard-Apps → Startbildschirm-App** RLauncher wählen.
+
+## Credits & Lizenz
+
+RLauncher basiert auf [Olauncher](https://github.com/tanujnotes/Olauncher) von [tanujnotes](https://github.com/tanujnotes) – alle übrigen Funktionen und das Design stammen von dort.
+
+Lizenz: [GNU GPLv3](LICENSE)

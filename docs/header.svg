@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="RLauncher – minimal launcher with web links">
+  <rect width="1280" height="640" fill="#0b0b0c"/>
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+    <text x="96" y="300" fill="#f5f5f4" font-size="112" font-weight="700" letter-spacing="-3">RLauncher</text>
+    <text x="100" y="364" fill="#a8a29e" font-size="34">Minimal launcher. Now with links.</text>
+    <text x="100" y="530" fill="#57534e" font-size="22">Based on Olauncher · GPLv3</text>
+
+    <!-- phone -->
+    <rect x="840" y="64" width="300" height="512" rx="36" fill="none" stroke="#3f3f46" stroke-width="3"/>
+    <text x="872" y="150" fill="#f5f5f4" font-size="44" font-weight="300">10:24</text>
+    <text x="874" y="180" fill="#78716c" font-size="16">Monday, 12 Oct</text>
+    <g fill="#e7e5e4" font-size="26">
+      <text x="874" y="300">Phone</text>
+      <text x="874" y="350">Messages</text>
+      <text x="874" y="400" fill="#f5f5f4" font-weight="600">Web URL<tspan fill="#a8a29e" font-weight="400"> ↗</tspan></text>
+      <text x="874" y="450">Camera</text>
+    </g>
+  </g>
+</svg>
