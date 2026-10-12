@@ -1,6 +1,9 @@
 package app.olauncher.helper
 
 import android.content.Context
+import android.content.pm.ShortcutInfo
+import android.os.Build
+import android.text.InputType
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.Menu
@@ -8,12 +11,18 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.EditText
+import android.widget.LinearLayout
+import androidx.annotation.RequiresApi
 import androidx.annotation.MenuRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
+import app.olauncher.R
 import app.olauncher.data.Prefs
+import app.olauncher.data.linkUrl
 import app.olauncher.databinding.DialogBaseBinding
 
 /**
@@ -117,4 +126,40 @@ fun Context.showMessageDialog(
     val dialog = createDialog(title, action, message = message, onAction = onAction)
     dialog.showRespectingStatusBar()
     return dialog
+}
+
+// Adds a link entry (shortcut == null, asks for name + URL) or edits the URL of an existing one
+@RequiresApi(Build.VERSION_CODES.O)
+fun Context.showLinkDialog(shortcut: ShortcutInfo?, onSaved: () -> Unit) {
+    val nameInput = EditText(this).apply {
+        hint = getString(R.string.link_name)
+        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        setText(shortcut?.shortLabel)
+    }
+    val urlInput = EditText(this).apply {
+        hint = getString(R.string.link_url)
+        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+        setText(shortcut?.intent?.dataString)
+    }
+    val layout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(20.dpToPx(), 8.dpToPx(), 20.dpToPx(), 0)
+        if (shortcut == null) addView(nameInput)
+        addView(urlInput)
+    }
+    AlertDialog.Builder(this)
+        .setTitle(if (shortcut == null) R.string.add_link else R.string.link_url)
+        .setView(layout)
+        .setPositiveButton(android.R.string.ok) { _, _ ->
+            val url = linkUrl(urlInput.text.toString())
+            val name = nameInput.text.toString().trim()
+                .ifEmpty { url?.toUri()?.host?.removePrefix("www.").orEmpty() }
+            when {
+                url == null -> showToast(R.string.invalid_link)
+                saveLinkShortcut(shortcut?.id ?: "link-${System.currentTimeMillis()}", name, url) -> onSaved()
+                else -> showToast(R.string.shortcut_pin_failed)
+            }
+        }
+        .setNegativeButton(android.R.string.cancel, null)
+        .show()
 }

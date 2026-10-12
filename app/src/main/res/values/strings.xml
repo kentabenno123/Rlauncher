@@ -172,6 +172,8 @@
     <string name="shortcut_pin_failed">Could not add shortcut</string>
     <string name="link_url" translatable="false">URL</string>
     <string name="invalid_link">Not a valid link</string>
+    <string name="add_link">Add link</string>
+    <string name="link_name" translatable="false">Name</string>
     <string name="invalid_shortcut">Invalid shortcut</string>
     <string name="shortcut_not_found">Shortcut not found</string>
     <string name="unable_to_open_shortcut">Unable to open shortcut</string>

@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
-import android.text.InputType
 import android.text.Spannable
 import android.view.LayoutInflater
 import android.view.View
@@ -12,10 +11,8 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.net.toUri
 import androidx.fragment.app.activityViewModels
@@ -41,6 +38,7 @@ import app.olauncher.helper.openAppInfo
 import app.olauncher.helper.openSearch
 import app.olauncher.helper.openUrl
 import app.olauncher.helper.saveLinkShortcut
+import app.olauncher.helper.showLinkDialog
 import app.olauncher.helper.showKeyboard
 import app.olauncher.helper.showToast
 import app.olauncher.helper.uninstall
@@ -171,25 +169,8 @@ class AppDrawerFragment : BaseFragment() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun editLink(appModel: AppModel.PinnedShortcut) {
-        val context = requireContext()
-        val shortcut = context.getLinkShortcut(appModel.shortcutId) ?: return
-        val input = EditText(context).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
-            setText(shortcut.intent?.dataString)
-        }
-        AlertDialog.Builder(context)
-            .setTitle(R.string.link_url)
-            .setView(input)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                val url = linkUrl(input.text.toString())
-                when {
-                    url == null -> context.showToast(getString(R.string.invalid_link))
-                    context.saveLinkShortcut(shortcut.id, shortcut.shortLabel.toString(), url) -> viewModel.getAppList()
-                    else -> context.showToast(getString(R.string.shortcut_pin_failed))
-                }
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
+        val shortcut = requireContext().getLinkShortcut(appModel.shortcutId) ?: return
+        requireContext().showLinkDialog(shortcut) { viewModel.getAppList() }
     }
 
     private fun initAdapter() {
