@@ -9,12 +9,7 @@ object Constants {
 
     object Dialog {
         const val ABOUT = "ABOUT"
-        const val WALLPAPER = "WALLPAPER"
-        const val REVIEW = "REVIEW"
-        const val RATE = "RATE"
-        const val SHARE = "SHARE"
         const val HIDDEN = "HIDDEN"
-        const val KEYBOARD = "KEYBOARD"
         const val DIGITAL_WELLBEING = "DIGITAL_WELLBEING"
     }
 
@@ -80,7 +75,6 @@ object Constants {
     const val REQUEST_CODE_ENABLE_ADMIN = 666
     const val REQUEST_CODE_LAUNCHER_SELECTOR = 678
 
-    const val HINT_RATE_US = 15
 
     const val LONG_PRESS_DELAY_MS = 500L
     const val ONE_DAY_IN_MILLIS = 86400000L
@@ -97,8 +91,6 @@ object Constants {
     const val URL_PLAY_STORE_DEV = "https://play.google.com/store/apps/dev?id=7198807840081074933"
     const val URL_TWITTER_TANUJ = "https://x.com/tanujnotes"
     const val URL_WALLPAPERS = "https://gist.githubusercontent.com/tanujnotes/85e2d0343ace71e76615ac346fbff82b/raw"
-    const val URL_NTS = "https://play.google.com/store/apps/details?id=com.makenotetoself"
-    const val URL_PENTASTIC = "https://play.google.com/store/apps/details?id=app.pentastic"
     const val URL_DEFAULT_DARK_WALLPAPER = "https://images.unsplash.com/photo-1512551980832-13df02babc9e"
     const val URL_DEFAULT_LIGHT_WALLPAPER = "https://images.unsplash.com/photo-1515549832467-8783363e19b6"
     const val URL_DUCK_SEARCH = "https://duck.co/?q="

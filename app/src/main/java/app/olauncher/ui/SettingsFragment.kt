@@ -55,7 +55,6 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
-    private val showPentastic = System.currentTimeMillis() % 2 == 0L
     private var dialog: OlDialog? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -92,9 +91,6 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         populateActionHints()
         initClickListeners()
         initObservers()
-
-        if (showPentastic)
-            binding.footer.text = getText(R.string.new_app_minimal_todo_lists)
     }
 
     override fun onClick(view: View) {
@@ -136,11 +132,6 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
             R.id.twitter -> requireContext().openUrl(Constants.URL_TWITTER_TANUJ)
             R.id.github -> requireContext().openUrl(Constants.URL_OLAUNCHER_GITHUB)
             R.id.privacy -> requireContext().openUrl(Constants.URL_OLAUNCHER_PRIVACY)
-            R.id.footer -> {
-                requireContext().openUrl(
-                    if (showPentastic) Constants.URL_PENTASTIC else Constants.URL_NTS
-                )
-            }
         }
     }
 
@@ -189,7 +180,6 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         binding.twitter.setOnClickListener(this)
         binding.github.setOnClickListener(this)
         binding.privacy.setOnClickListener(this)
-        binding.footer.setOnClickListener(this)
 
         binding.dailyWallpaper.setOnLongClickListener(this)
         binding.alignment.setOnLongClickListener(this)
@@ -491,13 +481,8 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
     }
 
     private fun toggleKeyboardText() {
-        if (prefs.autoShowKeyboard && prefs.keyboardMessageShown.not()) {
-            viewModel.showDialog.postValue(Constants.Dialog.KEYBOARD)
-            prefs.keyboardMessageShown = true
-        } else {
-            prefs.autoShowKeyboard = !prefs.autoShowKeyboard
-            populateKeyboardText()
-        }
+        prefs.autoShowKeyboard = !prefs.autoShowKeyboard
+        populateKeyboardText()
     }
 
     private fun updateTheme(appTheme: Int) {
@@ -650,9 +635,6 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
     private fun populateActionHints() {
         if (prefs.aboutClicked.not())
             binding.aboutOlauncher.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_info, 0)
-        if (viewModel.isOlauncherDefault.value != true) return
-        if (prefs.rateClicked.not() && prefs.toShowHintCounter > Constants.HINT_RATE_US && prefs.toShowHintCounter < Constants.HINT_RATE_US + 100)
-            binding.rate.setCompoundDrawablesWithIntrinsicBounds(0, android.R.drawable.arrow_down_float, 0, 0)
     }
 
     override fun onDestroyView() {
@@ -664,8 +646,4 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         _binding = null
     }
 
-    override fun onDestroy() {
-        viewModel.checkForMessages.call()
-        super.onDestroy()
-    }
 }

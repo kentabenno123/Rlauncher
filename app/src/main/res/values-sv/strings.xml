@@ -15,9 +15,7 @@
     <string name="change_default_launcher">Ändra förvald startskärmsapp</string>
     <string name="privacy">Integritet</string>
     <string name="share">Dela</string>
-    <string name="share_now">Dela nu</string>
     <string name="rate">Betygsätt</string>
-    <string name="rate_now">Betygsätt nu</string>
     <string name="follow">Följ</string>
     <string name="email">E-post</string>
     <string name="donate">Donera</string>
@@ -57,15 +55,10 @@
         \n\nKom ihåg, om du har några frågor har vår sida Om oss svaret.</string>
     <string name="rate_us_message">Hejsan, du kommer inte att se detta meddelande igen.
         \n\nOm du tycker att RLauncher är användbar, skulle du vänligen kunna lämna en 5-stjärnig recension? Det skulle göra oss väldigt glada. Tack!</string>
-    <string name="share_message">Vi behöver din hjälp! Vi tycker att alla borde känna till RLauncher och dess fördelar, men vi klarar det inte på egen hand.\n\nKan du dela RLauncher med dina vänner, din familj och dina följare? Tack för ditt stöd! ❤</string>
-    <string name="keyboard_message">Hejsan, tangentbordet är det snabbaste sättet att hitta och starta appar i RLauncher. Får vi be dig att behålla denna På i några dagar till innan du bestämmer dig?
-        \n\nValet är alltid ditt.</string>
     <string name="digital_wellbeing_message">Om du vill ställa in tidsgränser för vissa appar, kan Digitalt välmående-funktionen i Android hjälpa dig att göra det.
         \n\nVänligen sök efter Digitalt välmående i dina telefoninställningar och aktivera den.</string>
     <string name="app_usage_message">För att visa/dölja din skärmtid på startsidan, vänligen tillåt eller neka appanvändningsbehörigheten.
         \n\nObs: Inga data om appanvändning samlas in. Allt bearbetas på din enhet.</string>
-    <string name="wallpaper_message">RLauncher erbjuder vackra nya bakgrundsbilder varje dag. Ge din hemskärm ett fräscht utseende varje dag, gratis!
-        \n\nVill du prova?</string>
     <string name="accessibility_service_description">Tillgänglighetsbehörigheten krävs för att aktivera gesten dubbeltryck för att låsa. Inga data som RLauncher får via denna tjänst lämnar din enhet.</string>
     <string name="support_olauncher_for_free">Stöd RLauncher utan kostnad genom att använda vår Amazon-affiliatelänk.</string>
     <string name="support_olauncher_message">Varje gång du köper något via vår länk får vi en liten provision. Vänligen spara länken och använd den när du handlar på nätet.\nTack!</string>
@@ -121,15 +114,8 @@
     <string name="about_olauncher">Om och vanliga frågor</string>
     <string name="screen_time">Skärmtid</string>
     <string name="learn_more">Läs mer</string>
-    <string name="did_you_know">Visste du?</string>
-    <string name="leave_a_review">Lämna en recension</string>
-    <string name="review_message">RLauncher är gratis och kommer alltid att vara det. Den har inga annonser, samlar inte in några data och minskar din skärmtid, vilket ger ett hälsosammare liv.\n\nVi hoppas att du gillar den. Berätta vad du tycker.</string>
     <string name="alignment_changed">Justering ändrad ✅</string>
     <string name="home_screen">Startskärm</string>
-    <string name="hey">Hej</string>
-    <string name="new_year_wish">För ett år bättre än alla tidigare. Gott nytt år!</string>
-    <string name="new_year_wish_1">Det spelar ingen roll hur januari gick. Du har fortfarande resten av året på dig att göra bättre ifrån dig än någonsin.</string>
-    <string name="cheers">Skål!</string>
     <string name="notification_bar">Aviseringsfält</string>
     <string name="private_space">Privat rum</string>
     <string name="invalid_pin_request">Ogiltig begäran om att fästa</string>

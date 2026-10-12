@@ -15,9 +15,7 @@
     <string name="change_default_launcher">Vaihda oletuskäynnistintä</string>
     <string name="privacy">Yksityisyys</string>
     <string name="share">Jaa</string>
-    <string name="share_now">Jaa nyt</string>
     <string name="rate">Arvostele</string>
-    <string name="rate_now">Arvostele nyt</string>
     <string name="follow">Seuraa</string>
     <string name="email">Sähköposti</string>
     <string name="donate">Lahjoita</string>
@@ -57,15 +55,9 @@
         \n\nMuista, että jos sinulla on kysyttävää, Tietoja-sivulta löytyy vastaus.</string>
     <string name="rate_us_message">Hei, et näe tätä viestiä enää uudelleen.
         \n\nJos RLauncher on ollut sinulle hyödyllinen, voisitko jättää 5 tähden arvostelun? Se merkitsisi meille paljon. Kiitos!</string>
-    <string name="share_message">Tarvitsemme apuasi! Uskomme, että kaikkien pitäisi tietää RLauncherista ja sen hyödyistä, mutta emme voi tehdä sitä yksin.
-        \n\nVoisitko jakaa RLauncherin ystävillesi, perheellesi ja seuraajillesi? Kiitos tuestasi! ❤</string>
-    <string name="keyboard_message">Hei, näppäimistö on nopein tapa löytää ja avata sovelluksia RLauncherissa. Voisitko pitää sen päällä vielä muutaman päivän ja päättää sitten?
-        \n\nValinta on aina sinun.</string>
     <string name="digital_wellbeing_message">Jos haluat asettaa aikarajoja tietyille sovelluksille, Androidin Digitaalinen hyvinvointi -toiminto voi auttaa sinua siinä. Etsi Digitaalinen hyvinvointi puhelimesi asetuksista ja ota se käyttöön.</string>
     <string name="app_usage_message">Näyttääksesi/piilottaaksesi ruutuajan aloitusnäytöllä, salli tai kiellä sovellusten käyttöoikeus.
         \n\nHuomio: Sovellusten käyttötietoja ei kerätä. Kaikki käsitellään laitteellasi.</string>
-    <string name="wallpaper_message">RLauncher tarjoaa kauniita uusia taustakuvia päivittäin. Anna aloitusnäytöllesi uusi ilme joka päivä, ilmaiseksi!
-        \n\nHaluatko kokeilla?</string>
     <string name="accessibility_service_description">Esteettömyysoikeus vaaditaan Lukitse kaksoisnapautuksella -eleen käyttöönottoon. Mitään RLauncherin tämän palvelun kautta hankkimaa tietoa ei lähetetä laitteestasi pois.</string>
     <string name="support_olauncher_for_free">Tue RLauncheria ilmaiseksi käyttämällä Amazon-kumppanuuslinkkiämme.</string>
     <string name="support_olauncher_message">Aina kun ostat jotain linkkimme kautta, saamme pienen palkkion. Tallenna linkki ja käytä sitä aina kun teet ostoksia verkossa.\nKiitos!</string>
@@ -121,16 +113,8 @@
     <string name="about_olauncher">Tietoja ja usein kysytyt kysymykset</string>
     <string name="screen_time">Ruutuaika</string>
     <string name="learn_more">Lue lisää</string>
-    <string name="did_you_know">Tiesitkö?</string>
-    <string name="leave_a_review">Jätä arvostelu</string>
-    <string name="review_message">RLauncher on ilmainen ja tulee aina olemaan. Siinä ei ole mainoksia, se ei kerää tietoja ja se vähentää ruutuaikaa, mikä johtaa terveellisempään elämään.
-        \n\nToivottavasti pidät siitä. Kerro meille mielipiteesi.</string>
     <string name="alignment_changed">Tasaus muutettu ✅</string>
     <string name="home_screen">Aloitusnäyttö</string>
-    <string name="hey">Hei</string>
-    <string name="new_year_wish">Tässä malja vuodelle, joka on parempi kuin mikään aiempi. Hyvää uutta vuotta!</string>
-    <string name="new_year_wish_1">Sillä ei ole väliä, miten tammikuu meni. Sinulla on vielä koko loppuvuosi tehdäksesi paremmin kuin koskaan.</string>
-    <string name="cheers">Kippis!</string>
     <string name="notification_bar">Ilmoituspalkki</string>
     <string name="private_space">Yksityinen tila</string>
     <string name="invalid_pin_request">Virheellinen kiinnityspyyntö</string>
