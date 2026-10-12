@@ -85,6 +85,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         populateTextSize()
         populateBoldFont()
         populateAlignment()
+        populateExtendHomeAppsArea()
         populateStatusBar()
         populateDateTime()
         populateSwipeApps()
@@ -109,6 +110,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
             R.id.dailyWallpaperUrl -> requireContext().openUrl(prefs.dailyWallpaperUrl)
             R.id.dailyWallpaper -> toggleDailyWallpaperUpdate()
             R.id.alignment -> showAlignmentMenu(view)
+            R.id.extendHomeAppsArea -> toggleExtendHomeAppsArea()
             R.id.statusBar -> toggleStatusBar()
             R.id.dateTime -> showDateTimeMenu(view)
             R.id.appThemeText -> showAppThemeMenu(view, showSystem = false)
@@ -167,6 +169,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         binding.dailyWallpaperUrl.setOnClickListener(this)
         binding.dailyWallpaper.setOnClickListener(this)
         binding.alignment.setOnClickListener(this)
+        binding.extendHomeAppsArea.setOnClickListener(this)
         binding.statusBar.setOnClickListener(this)
         binding.dateTime.setOnClickListener(this)
         binding.swipeLeftApp.setOnClickListener(this)
@@ -317,6 +320,15 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
             binding.swipeRightApp.setTextColor(requireContext().getColorFromAttr(R.attr.primaryColorTrans50))
             requireContext().showToast(getString(R.string.swipe_right_app_disabled))
         }
+    }
+
+    private fun toggleExtendHomeAppsArea() {
+        prefs.extendHomeAppsArea = !prefs.extendHomeAppsArea
+        populateExtendHomeAppsArea()
+    }
+
+    private fun populateExtendHomeAppsArea() {
+        binding.extendHomeAppsArea.text = getString(if (prefs.extendHomeAppsArea) R.string.on else R.string.off)
     }
 
     private fun toggleStatusBar() {

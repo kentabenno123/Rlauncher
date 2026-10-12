@@ -49,6 +49,7 @@ Wird RLauncher deinstalliert, sind die Links weg.
 - Links in der App-Liste (siehe oben)
 - App-ID `app.rlauncher` – läuft parallel zu einem installierten Olauncher
 - Name RLauncher in der App
+- Option „Apps: Größere Klick-Fläche“ (Einstellungen → Startbildschirm, aus Olauncher CF übernommen): die ganze Zeile eines Startseiten-Eintrags ist antippbar, nicht nur der Text
 - Keine Werbe- und Erinnerungs-Popups (Pro-Version, Bewertung, Teilen, Hintergründe, Neujahrsgrüße) und keine Werbezeile für andere Apps
 
 ## Installation
