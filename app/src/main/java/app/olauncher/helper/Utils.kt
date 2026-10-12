@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherApps
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
 import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Bitmap
@@ -659,3 +661,37 @@ fun Context.deletePinnedShortcut(packageName: String, shortcutIdToDelete: String
         Log.e("ShortcutHelper", "Failed to modify pinned shortcuts for $packageName", e)
     }
 }
+
+// Creates or updates a pinned RLauncher shortcut that opens the URL in the default browser
+@RequiresApi(Build.VERSION_CODES.O)
+fun Context.saveLinkShortcut(id: String, label: String, url: String): Boolean {
+    val shortcutManager = getSystemService(ShortcutManager::class.java)
+    val shortcut = ShortcutInfo.Builder(this, id)
+        .setShortLabel(label)
+        .setIntent(Intent(Intent.ACTION_VIEW, url.toUri()))
+        .build()
+    return try {
+        val pinnedIds = shortcutManager.pinnedShortcuts.map { it.id }
+        if (id in pinnedIds) {
+            shortcutManager.updateShortcuts(listOf(shortcut))
+        } else {
+            // Only the default launcher may pin directly, so no confirmation dialog is needed
+            shortcutManager.addDynamicShortcuts(listOf(shortcut))
+            getSystemService(LauncherApps::class.java)
+                .pinShortcuts(packageName, pinnedIds + id, android.os.Process.myUserHandle())
+        }
+        true
+    } catch (e: Exception) {
+        Log.e("ShortcutHelper", "Failed to save link shortcut $id", e)
+        false
+    } finally {
+        shortcutManager.removeDynamicShortcuts(listOf(id))
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun Context.getLinkShortcut(id: String): ShortcutInfo? =
+    getSystemService(ShortcutManager::class.java).pinnedShortcuts.find { it.id == id }
+
+fun AppModel.isLink(context: Context): Boolean =
+    this is AppModel.PinnedShortcut && appPackage == context.packageName

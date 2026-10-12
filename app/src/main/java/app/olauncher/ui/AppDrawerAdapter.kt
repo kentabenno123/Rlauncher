@@ -21,6 +21,7 @@ import app.olauncher.data.Constants
 import app.olauncher.databinding.AdapterAppDrawerBinding
 import app.olauncher.databinding.AdapterPrivateSpaceHeaderBinding
 import app.olauncher.helper.hideKeyboard
+import app.olauncher.helper.isLink
 import app.olauncher.helper.isSystemApp
 import app.olauncher.helper.showKeyboard
 import java.text.Normalizer
@@ -265,6 +266,9 @@ class AppDrawerAdapter(
                         true -> 0.5f
                         false -> 1.0f
                     }
+                    appInfo.text = root.context.getString(
+                        if (appModel.isLink(root.context)) R.string.link_url else R.string.info
+                    )
                     appHideLayout.visibility = View.VISIBLE
                     // Only allow renaming non hidden apps
                     appRename.isVisible = flag != Constants.FLAG_HIDDEN_APPS

@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
+import android.text.InputType
 import android.text.Spannable
 import android.view.LayoutInflater
 import android.view.View
@@ -11,8 +12,12 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import androidx.core.net.toUri
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,15 +28,19 @@ import app.olauncher.R
 import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
+import app.olauncher.data.linkUrl
 import app.olauncher.databinding.FragmentAppDrawerBinding
 import app.olauncher.helper.deletePinnedShortcut
+import app.olauncher.helper.getLinkShortcut
 import app.olauncher.helper.hideKeyboard
 import app.olauncher.helper.isEinkDisplay
+import app.olauncher.helper.isLink
 import app.olauncher.helper.isSystemAnimationsDisabled
 import app.olauncher.helper.isSystemApp
 import app.olauncher.helper.openAppInfo
 import app.olauncher.helper.openSearch
 import app.olauncher.helper.openUrl
+import app.olauncher.helper.saveLinkShortcut
 import app.olauncher.helper.showKeyboard
 import app.olauncher.helper.showToast
 import app.olauncher.helper.uninstall
@@ -95,8 +104,11 @@ class AppDrawerFragment : BaseFragment() {
     private fun initSearch() {
         binding.search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
+                val url = query?.let { linkUrl(it) }
                 if (query?.startsWith("!") == true)
                     requireContext().openUrl(Constants.URL_DUCK_SEARCH + query.replace(" ", "%20"))
+                else if (url != null && flag == Constants.FLAG_LAUNCH_APP && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    addLink(url)
                 else if (adapter.itemCount == 0)
                     requireContext().openSearch(query?.trim())
                 else
@@ -146,6 +158,40 @@ class AppDrawerFragment : BaseFragment() {
         return result
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun addLink(url: String) {
+        val label = url.toUri().host?.removePrefix("www.") ?: url
+        if (requireContext().saveLinkShortcut("link-${System.currentTimeMillis()}", label, url)) {
+            binding.search.setQuery("", false)
+            viewModel.getAppList()
+        } else {
+            requireContext().showToast(getString(R.string.shortcut_pin_failed))
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun editLink(appModel: AppModel.PinnedShortcut) {
+        val context = requireContext()
+        val shortcut = context.getLinkShortcut(appModel.shortcutId) ?: return
+        val input = EditText(context).apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            setText(shortcut.intent?.dataString)
+        }
+        AlertDialog.Builder(context)
+            .setTitle(R.string.link_url)
+            .setView(input)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val url = linkUrl(input.text.toString())
+                when {
+                    url == null -> context.showToast(getString(R.string.invalid_link))
+                    context.saveLinkShortcut(shortcut.id, shortcut.shortLabel.toString(), url) -> viewModel.getAppList()
+                    else -> context.showToast(getString(R.string.shortcut_pin_failed))
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
     private fun initAdapter() {
         adapter = AppDrawerAdapter(
             flag,
@@ -158,12 +204,16 @@ class AppDrawerFragment : BaseFragment() {
                     findNavController().popBackStack()
             },
             appInfoListener = {
-                openAppInfo(
-                    requireContext(),
-                    it.user,
-                    it.appPackage
-                )
-                findNavController().popBackStack(R.id.mainFragment, false)
+                if (it.isLink(requireContext()) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    editLink(it as AppModel.PinnedShortcut)
+                } else {
+                    openAppInfo(
+                        requireContext(),
+                        it.user,
+                        it.appPackage
+                    )
+                    findNavController().popBackStack(R.id.mainFragment, false)
+                }
             },
             appDeleteListener = { appModel ->
                 when (appModel) {
