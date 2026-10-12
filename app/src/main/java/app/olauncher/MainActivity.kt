@@ -266,12 +266,6 @@ class MainActivity : AppCompatActivity() {
                         startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
                     }
                 }
-
-                Constants.Dialog.PRO_MESSAGE -> {
-                    showMessage(R.string.hey, R.string.pro_message, R.string.olauncher_pro) {
-                        openUrl(Constants.URL_OLAUNCHER_PRO)
-                    }
-                }
             }
         }
     }
