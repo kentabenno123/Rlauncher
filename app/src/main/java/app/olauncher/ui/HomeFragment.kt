@@ -1,6 +1,7 @@
 package app.olauncher.ui
 
 import android.Manifest
+import android.animation.LayoutTransition
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.app.admin.DevicePolicyManager
@@ -122,6 +123,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     override fun onPause() {
         labBlink.pause() // no blinking while an app is in front
+        // Folders are always closed when you come back, without a fade-out on return
+        binding.homeAppsLayout.layoutTransition = null
+        expandedFolders.clear()
+        removeFolderApps()
         super.onPause()
     }
 
@@ -387,8 +392,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun populateHomeScreen(appCountUpdated: Boolean) {
         if (appCountUpdated) hideHomeApps()
-        binding.homeAppsLayout.children.filter { it.tag is FolderItem }.toList()
-            .forEach { binding.homeAppsLayout.removeView(it) }
+        removeFolderApps()
         populateDateTime()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
@@ -463,9 +467,8 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     ): Boolean {
         val location = textView.tag.toString().toInt()
         prefs.getFolder(location)?.let { apps ->
-            val expanded = location in expandedFolders
-            textView.text = getString(if (expanded) R.string.folder_open else R.string.folder_closed, appName)
-            if (expanded) showFolderApps(textView, location, apps)
+            textView.text = folderLabel(location, appName)
+            if (location in expandedFolders) showFolderApps(textView, location, apps)
             return true
         }
 
@@ -579,9 +582,9 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun homeAppClicked(location: Int) {
-        if (prefs.getFolder(location) != null) {
-            if (!expandedFolders.remove(location)) expandedFolders.add(location)
-            populateHomeScreen(false)
+        val folderApps = prefs.getFolder(location)
+        if (folderApps != null) {
+            toggleFolder(location, folderApps)
             return
         }
         launchAppOrShortcut(
@@ -592,6 +595,30 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             isShortcut = prefs.getIsShortcut(location),
             userString = prefs.getAppUser(location)
         )
+    }
+
+    private fun folderLabel(location: Int, name: String = prefs.getAppName(location)) =
+        getString(if (location in expandedFolders) R.string.folder_open else R.string.folder_closed, name)
+
+    private fun toggleFolder(location: Int, apps: List<FolderApp>) {
+        val layout = binding.homeAppsLayout
+        val folderView = layout.findViewWithTag<TextView>(location.toString()) ?: return
+        // Set on first use only, so the home apps don't fade in every time the screen is built
+        if (layout.layoutTransition == null) layout.layoutTransition = LayoutTransition().apply { setDuration(200) }
+        if (expandedFolders.remove(location)) removeFolderApps(location)
+        else {
+            expandedFolders.add(location)
+            showFolderApps(folderView, location, apps)
+        }
+        folderView.text = folderLabel(location)
+    }
+
+    // Removes the shown apps of one folder, or of all folders
+    private fun removeFolderApps(location: Int? = null) {
+        val layout = binding.homeAppsLayout
+        layout.children.filter { (it.tag as? FolderItem)?.let { item -> location == null || item.location == location } == true }
+            .toList()
+            .forEach { layout.removeView(it) }
     }
 
     // Lists the folder's apps indented right below the folder entry
@@ -622,7 +649,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun folderAppClicked(item: FolderItem) {
         val app = prefs.getFolder(item.location)?.getOrNull(item.index) ?: return
-        expandedFolders.remove(item.location) // the folder is closed again when you come back
         launchAppOrShortcut(
             appName = app.label,
             packageName = app.packageName,
