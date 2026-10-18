@@ -1,6 +1,11 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
+// Personal settings live in the git-ignored local.properties
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) localPropertiesFile.withInputStream { localProperties.load(it) }
+
 android {
     compileSdk 36
 
@@ -22,6 +27,9 @@ android {
 
         resourceConfigurations += ["en", "ar", "cs", "da", "de", "el", "es-rES", "es-rUS", "fi", "fr", "he", "hi", "hr", "hu", "in", "it", "ja", "ko", "nb", "nl", "pl", "pt-rBR", "ro", "ru-rRU", "sv", "th", "tr", "uk", "vi", "zh"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "KUMA_STATUS_URL", "\"${localProperties.getProperty('rlauncher.kumaStatusUrl', '')}\""
+        buildConfigField "String", "WEATHER_FALLBACK", "\"${localProperties.getProperty('rlauncher.weatherFallback', '')}\""
     }
 
     buildTypes {

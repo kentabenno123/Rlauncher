@@ -19,9 +19,13 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
+import app.olauncher.data.FolderApp
 import app.olauncher.data.Prefs
 import app.olauncher.helper.SingleLiveEvent
 import app.olauncher.helper.WallpaperWorker
+import app.olauncher.helper.Weather
+import app.olauncher.helper.fetchLabOk
+import app.olauncher.helper.fetchWeather
 import app.olauncher.helper.formattedTimeSpent
 import app.olauncher.helper.getAppsList
 import app.olauncher.helper.getPrivateSpaceApps
@@ -51,6 +55,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val launcherResetFailed = MutableLiveData<Boolean>()
     val homeAppAlignment = MutableLiveData<Int>()
     val screenTimeValue = MutableLiveData<String>()
+    val weather = MutableLiveData<Weather?>()
+    val labOk = MutableLiveData<Boolean?>()
+    private var weatherFetchedAt = 0L
+    private var labFetchedAt = 0L
 
     val privateSpaceApps = MutableLiveData<List<AppModel>?>()
     val privateSpaceLocked = MutableLiveData<Boolean>()
@@ -63,6 +71,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val resetLauncherLiveData = SingleLiveEvent<Unit?>()
     // Home button for recents feature disabled
     // val showRecentApps = SingleLiveEvent<Unit?>()
+
+    fun refreshWeather(force: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!force && now - weatherFetchedAt < 30 * 60_000) return
+        weatherFetchedAt = now
+        viewModelScope.launch {
+            val result = fetchWeather(appContext)
+            if (result == null) weatherFetchedAt = 0L // retry on the next visit to the home screen
+            else weather.value = result
+        }
+    }
+
+    fun refreshLabStatus() {
+        val now = System.currentTimeMillis()
+        if (BuildConfig.KUMA_STATUS_URL.isEmpty() || now - labFetchedAt < 60_000) return
+        labFetchedAt = now
+        viewModelScope.launch { labOk.value = fetchLabOk(BuildConfig.KUMA_STATUS_URL) }
+    }
 
     fun selectedApp(appModel: AppModel, flag: Int) {
         if (appModel is AppModel.PrivateSpaceHeader) return
@@ -97,6 +123,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             Constants.FLAG_SET_CLOCK_APP -> saveClockApp(appModel)
             Constants.FLAG_SET_CALENDAR_APP -> saveCalendarApp(appModel)
             Constants.FLAG_SET_SCREEN_TIME_APP -> saveScreenTimeApp(appModel)
+            in Constants.FLAG_ADD_TO_FOLDER + 1..Constants.FLAG_ADD_TO_FOLDER + 8 ->
+                addToFolder(appModel, flag - Constants.FLAG_ADD_TO_FOLDER)
         }
     }
 
@@ -274,7 +302,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
+        prefs.setFolder(position, null) // an app placed on a slot replaces any folder there
         refreshHome(false)
+    }
+
+    private fun addToFolder(appModel: AppModel, location: Int) {
+        val app = when (appModel) {
+            is AppModel.App -> FolderApp(
+                appModel.appLabel, appModel.appPackage, appModel.activityClassName.orEmpty(), appModel.user.toString(), ""
+            )
+            is AppModel.PinnedShortcut -> FolderApp(
+                appModel.appLabel, appModel.appPackage, "", appModel.user.toString(), appModel.shortcutId
+            )
+            is AppModel.PrivateSpaceHeader -> return
+        }
+        prefs.setFolder(location, prefs.getFolder(location).orEmpty() + app)
     }
 
     private fun saveSwipeApp(appModel: AppModel, isLeft: Boolean) {

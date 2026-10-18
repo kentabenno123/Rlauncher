@@ -15,6 +15,7 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.SearchView
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,6 +40,7 @@ import app.olauncher.helper.openSearch
 import app.olauncher.helper.openUrl
 import app.olauncher.helper.saveLinkShortcut
 import app.olauncher.helper.showLinkDialog
+import app.olauncher.helper.showTextInputDialog
 import app.olauncher.helper.showKeyboard
 import app.olauncher.helper.showToast
 import app.olauncher.helper.uninstall
@@ -91,6 +93,8 @@ class AppDrawerFragment : BaseFragment() {
             binding.search.queryHint = getString(R.string.hidden_apps)
         else if (flag in Constants.FLAG_SET_HOME_APP_1..Constants.FLAG_SET_CALENDAR_APP)
             binding.search.queryHint = "Please select an app"
+        binding.newFolder.isVisible = flag in Constants.FLAG_SET_HOME_APP_1..Constants.FLAG_SET_HOME_APP_8
+        binding.newFolder.gravity = prefs.appLabelAlignment
         try {
             searchTextView = binding.search.findViewById(R.id.search_src_text)
             searchTextView?.gravity = prefs.appLabelAlignment
@@ -339,6 +343,12 @@ class AppDrawerFragment : BaseFragment() {
     }
 
     private fun initClickListeners() {
+        binding.newFolder.setOnClickListener {
+            requireContext().showTextInputDialog(R.string.new_folder, binding.search.query.toString().trim()) { name ->
+                prefs.createFolder(flag, name) // for home slots the flag equals the slot number
+                findNavController().popBackStack()
+            }
+        }
         binding.appRename.setOnClickListener {
             val name = binding.search.query.toString().trim()
             if (name.isEmpty()) {

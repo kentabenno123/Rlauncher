@@ -1,9 +1,13 @@
 package app.olauncher.ui
 
+import android.Manifest
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.BatteryManager
 import android.os.Build
@@ -16,9 +20,12 @@ import android.view.WindowInsets
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
+import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
@@ -29,6 +36,7 @@ import app.olauncher.MainViewModel
 import app.olauncher.R
 import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
+import app.olauncher.data.FolderApp
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentHomeBinding
 import app.olauncher.helper.appUsagePermissionGranted
@@ -42,7 +50,10 @@ import app.olauncher.helper.openCalendar
 import app.olauncher.helper.openCameraApp
 import app.olauncher.helper.openDialerApp
 import app.olauncher.helper.setPlainWallpaperByTheme
+import app.olauncher.helper.showPopupMenu
+import app.olauncher.helper.showTextInputDialog
 import app.olauncher.helper.showToast
+import app.olauncher.helper.weatherConditionRes
 import app.olauncher.listener.OnSwipeTouchListener
 import app.olauncher.listener.ViewSwipeTouchListener
 import java.text.SimpleDateFormat
@@ -58,6 +69,14 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
+    // Tag of an app shown inside an expanded home folder
+    private data class FolderItem(val location: Int, val index: Int)
+
+    private val expandedFolders = mutableSetOf<Int>()
+    private lateinit var labBlink: ObjectAnimator
+    private val locationPermissionRequest =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.refreshWeather(force = true) }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
@@ -72,6 +91,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
         deviceManager = context?.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
+        labBlink = ObjectAnimator.ofFloat(binding.labDot, View.ALPHA, 1f, 0.15f).apply {
+            duration = 700
+            repeatMode = ValueAnimator.REVERSE
+            repeatCount = ValueAnimator.INFINITE
+        }
         initObservers()
         setHomeAlignment(prefs.homeAlignment)
         initSwipeTouchListener()
@@ -82,8 +106,22 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         super.onResume()
         populateHomeScreen(false)
         viewModel.isOlauncherDefault()
+        val locationGranted = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+        if (!locationGranted && !prefs.locationPermissionAsked) {
+            prefs.locationPermissionAsked = true
+            locationPermissionRequest.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+        viewModel.refreshWeather()
+        viewModel.refreshLabStatus()
+        labBlink.resume()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
+    }
+
+    override fun onPause() {
+        labBlink.pause() // no blinking while an app is in front
+        super.onPause()
     }
 
     override fun onClick(view: View) {
@@ -97,6 +135,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             R.id.tvScreenTime -> openScreenTimeDigitalWellbeing()
 
             else -> {
+                (view.tag as? FolderItem)?.let {
+                    folderAppClicked(it)
+                    return
+                }
                 try { // Launch app
                     val appLocation = view.tag.toString().toInt()
                     homeAppClicked(appLocation)
@@ -132,6 +174,15 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     override fun onLongClick(view: View): Boolean {
+        (view.tag as? FolderItem)?.let {
+            showFolderAppMenu(view, it)
+            return true
+        }
+        val slot = view.tag?.toString()?.toIntOrNull()
+        if (slot != null && prefs.getFolder(slot) != null) {
+            showFolderMenu(view, slot)
+            return true
+        }
         when (view.id) {
             R.id.homeApp1 -> showAppList(Constants.FLAG_SET_HOME_APP_1, prefs.appName1.isNotEmpty(), true)
             R.id.homeApp2 -> showAppList(Constants.FLAG_SET_HOME_APP_2, prefs.appName2.isNotEmpty(), true)
@@ -204,6 +255,19 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         viewModel.screenTimeValue.observe(viewLifecycleOwner) {
             it?.let { binding.tvScreenTime.text = it }
         }
+        viewModel.weather.observe(viewLifecycleOwner) { weather ->
+            binding.weatherLayout.isVisible = weather != null
+            if (weather == null) return@observe
+            binding.weatherTemperature.text = getString(R.string.temperature, weather.temperature)
+            binding.weatherCondition.text = weatherConditionRes(weather.code)?.let { getString(it) }.orEmpty()
+        }
+        viewModel.labOk.observe(viewLifecycleOwner) { ok ->
+            binding.labStatus.isVisible = ok != null
+            binding.labDot.setTextColor(ContextCompat.getColor(requireContext(), if (ok == true) R.color.lab_ok else R.color.lab_down))
+            labBlink.cancel()
+            binding.labDot.alpha = 1f
+            if (ok == false) labBlink.start()
+        }
         // Home button for recents feature disabled
         // viewModel.showRecentApps.observe(viewLifecycleOwner) {
         //     binding.recents.performClick()
@@ -259,6 +323,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         val verticalGravity = if (prefs.homeBottomAlignment) Gravity.BOTTOM else Gravity.CENTER_VERTICAL
         binding.homeAppsLayout.gravity = horizontalGravity or verticalGravity
         binding.dateTimeLayout.gravity = horizontalGravity
+        binding.clockDateLayout.gravity = horizontalGravity
         // Full-width home apps make the whole row tappable, not just the label
         val appWidth = if (prefs.extendHomeAppsArea) ViewGroup.LayoutParams.MATCH_PARENT
         else ViewGroup.LayoutParams.WRAP_CONTENT
@@ -316,6 +381,8 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun populateHomeScreen(appCountUpdated: Boolean) {
         if (appCountUpdated) hideHomeApps()
+        binding.homeAppsLayout.children.filter { it.tag is FolderItem }.toList()
+            .forEach { binding.homeAppsLayout.removeView(it) }
         populateDateTime()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
@@ -388,6 +455,14 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         isShortcut: Boolean,
         shortcutId: String?,
     ): Boolean {
+        val location = textView.tag.toString().toInt()
+        prefs.getFolder(location)?.let { apps ->
+            val expanded = location in expandedFolders
+            textView.text = getString(if (expanded) R.string.folder_open else R.string.folder_closed, appName)
+            if (expanded) showFolderApps(textView, location, apps)
+            return true
+        }
+
         // Get user handle for the app/shortcut
         val userHandle = getUserHandleFromString(requireContext(), userString)
 
@@ -498,6 +573,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun homeAppClicked(location: Int) {
+        if (prefs.getFolder(location) != null) {
+            if (!expandedFolders.remove(location)) expandedFolders.add(location)
+            populateHomeScreen(false)
+            return
+        }
         launchAppOrShortcut(
             appName = prefs.getAppName(location),
             packageName = prefs.getAppPackage(location),
@@ -506,6 +586,78 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             isShortcut = prefs.getIsShortcut(location),
             userString = prefs.getAppUser(location)
         )
+    }
+
+    // Lists the folder's apps indented right below the folder entry
+    private fun showFolderApps(folderView: TextView, location: Int, apps: List<FolderApp>) {
+        val layout = binding.homeAppsLayout
+        val indent = 24.dpToPx()
+        val alignment = prefs.homeAlignment
+        apps.forEachIndexed { index, app ->
+            val appView = TextView(requireContext(), null, 0, R.style.TextLarge).apply {
+                text = app.label
+                tag = FolderItem(location, index)
+                gravity = alignment
+                setPaddingRelative(
+                    if (alignment == Gravity.START) indent else 0,
+                    folderView.paddingTop,
+                    if (alignment == Gravity.END) indent else 0,
+                    folderView.paddingBottom,
+                )
+                setOnTouchListener(getViewSwipeTouchListener(context, this))
+            }
+            layout.addView(
+                appView,
+                layout.indexOfChild(folderView) + 1 + index,
+                ViewGroup.LayoutParams(folderView.layoutParams.width, ViewGroup.LayoutParams.WRAP_CONTENT)
+            )
+        }
+    }
+
+    private fun folderAppClicked(item: FolderItem) {
+        val app = prefs.getFolder(item.location)?.getOrNull(item.index) ?: return
+        expandedFolders.remove(item.location) // the folder is closed again when you come back
+        launchAppOrShortcut(
+            appName = app.label,
+            packageName = app.packageName,
+            activityClassName = app.activityClassName.ifEmpty { null },
+            shortcutId = app.shortcutId,
+            isShortcut = app.shortcutId.isNotEmpty(),
+            userString = app.user
+        )
+    }
+
+    private fun showFolderMenu(view: View, location: Int) {
+        view.showPopupMenu(configure = { menu ->
+            menu.add(0, R.string.folder_add_app, 0, R.string.folder_add_app)
+            menu.add(0, R.string.rename, 1, R.string.rename)
+            menu.add(0, R.string.folder_dissolve, 2, R.string.folder_dissolve)
+        }) { item ->
+            when (item.itemId) {
+                R.string.folder_add_app ->
+                    showAppList(Constants.FLAG_ADD_TO_FOLDER + location, includeHiddenApps = true)
+
+                R.string.rename -> requireContext().showTextInputDialog(R.string.rename, prefs.getAppName(location)) {
+                    prefs.setAppName(location, it)
+                    populateHomeScreen(false)
+                }
+
+                R.string.folder_dissolve -> {
+                    prefs.setFolder(location, null)
+                    prefs.setAppName(location, "")
+                    expandedFolders.remove(location)
+                    populateHomeScreen(false)
+                }
+            }
+        }
+    }
+
+    private fun showFolderAppMenu(view: View, item: FolderItem) {
+        view.showPopupMenu(configure = { it.add(R.string.folder_remove_app) }) {
+            val apps = prefs.getFolder(item.location) ?: return@showPopupMenu
+            prefs.setFolder(item.location, apps.filterIndexed { index, _ -> index != item.index })
+            populateHomeScreen(false)
+        }
     }
 
     private fun openSwipeRightApp() {
@@ -717,6 +869,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     override fun onDestroyView() {
+        labBlink.cancel()
         super.onDestroyView()
         _binding = null
     }

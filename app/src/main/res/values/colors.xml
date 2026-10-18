@@ -28,4 +28,6 @@
     <color name="blackInverseTrans80">#CCFFFFFF</color>
     <color name="blackInverseTrans90">#E6FFFFFF</color>
 
+    <color name="lab_ok">#4CAF50</color>
+    <color name="lab_down">#F44336</color>
 </resources>

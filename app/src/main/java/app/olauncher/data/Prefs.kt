@@ -22,6 +22,7 @@ class Prefs(context: Context) {
     private val DAILY_WALLPAPER_URL = "DAILY_WALLPAPER_URL"
     private val HOME_ALIGNMENT = "HOME_ALIGNMENT"
     private val HOME_CLICK_AREA = "HOME_CLICK_AREA"
+    private val LOCATION_PERMISSION_ASKED = "LOCATION_PERMISSION_ASKED"
     private val HOME_BOTTOM_ALIGNMENT = "HOME_BOTTOM_ALIGNMENT"
     private val APP_LABEL_ALIGNMENT = "APP_LABEL_ALIGNMENT"
     private val STATUS_BAR = "STATUS_BAR"
@@ -167,6 +168,28 @@ class Prefs(context: Context) {
     var homeAlignment: Int
         get() = prefs.getInt(HOME_ALIGNMENT, Gravity.START)
         set(value) = prefs.edit { putInt(HOME_ALIGNMENT, value).apply() }
+
+    var locationPermissionAsked: Boolean
+        get() = prefs.getBoolean(LOCATION_PERMISSION_ASKED, false)
+        set(value) = prefs.edit { putBoolean(LOCATION_PERMISSION_ASKED, value) }
+
+    // Contents of a home slot folder; null means the slot holds a normal app
+    fun getFolder(location: Int): List<FolderApp>? =
+        prefs.getString("HOME_FOLDER_$location", null)?.let(::decodeFolder)
+
+    fun setFolder(location: Int, apps: List<FolderApp>?) = prefs.edit {
+        if (apps == null) remove("HOME_FOLDER_$location")
+        else putString("HOME_FOLDER_$location", encodeFolder(apps))
+    }
+
+    fun createFolder(location: Int, name: String) = prefs.edit {
+        putString("APP_NAME_$location", name)
+        putString("APP_PACKAGE_$location", "")
+        putBoolean("IS_SHORTCUT_$location", false)
+        putString("HOME_FOLDER_$location", "")
+    }
+
+    fun setAppName(location: Int, name: String) = prefs.edit { putString("APP_NAME_$location", name) }
 
     var extendHomeAppsArea: Boolean
         get() = prefs.getBoolean(HOME_CLICK_AREA, false)

@@ -163,3 +163,25 @@ fun Context.showLinkDialog(shortcut: ShortcutInfo?, onSaved: () -> Unit) {
         .setNegativeButton(android.R.string.cancel, null)
         .show()
 }
+
+// Asks for a single line of text, e.g. a folder name; blank input is ignored
+fun Context.showTextInputDialog(@StringRes title: Int, initialText: String, onSave: (String) -> Unit) {
+    val input = EditText(this).apply {
+        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        setText(initialText)
+        setSelection(text.length)
+    }
+    val layout = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(20.dpToPx(), 8.dpToPx(), 20.dpToPx(), 0)
+        addView(input)
+    }
+    AlertDialog.Builder(this)
+        .setTitle(title)
+        .setView(layout)
+        .setPositiveButton(android.R.string.ok) { _, _ ->
+            input.text.toString().trim().takeIf { it.isNotEmpty() }?.let(onSave)
+        }
+        .setNegativeButton(android.R.string.cancel, null)
+        .show()
+}
