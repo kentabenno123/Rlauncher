@@ -46,7 +46,7 @@ Uninstalling RLauncher removes all links.
 
 ## Folders
 
-A folder sits in a home screen slot like an app. Tap it to expand or collapse it. Its apps appear indented right below it, and the other entries move down.
+A folder sits in a home screen slot like an app. Tap it to expand or collapse it with a short animation. Its apps appear indented right below it, and the other entries move down. Folders are always closed when you return to the home screen.
 
 | Action | How |
 |---|---|
@@ -71,6 +71,8 @@ If an [Uptime Kuma](https://github.com/louislam/uptime-kuma) status page is conf
 - green: the latest check of every monitor on the status page is up
 - blinking red: anything else, including when the status page can't be reached
 
+Optionally, a second line above it shows **Gemma** (or any other single service) with a green or red dot, without blinking. It reads one monitor from the same status page by name, and that monitor is left out of the LAB status. This suits services that are often off, like a local LLM on a laptop.
+
 The status is checked each time you return to the home screen, at most once a minute.
 
 ## Configuration
@@ -80,6 +82,8 @@ Personal settings are read from the git-ignored `local.properties` at build time
 ```properties
 # Uptime Kuma status page; leave out to hide the LAB indicator
 rlauncher.kumaStatusUrl=https://status.example.com/status/home
+# Monitor on that status page shown as its own line above LAB; leave out to hide it
+rlauncher.gemmaMonitor=Gemma
 # Weather fallback as "latitude,longitude" when no location is available
 rlauncher.weatherFallback=52.5200,13.4050
 ```
