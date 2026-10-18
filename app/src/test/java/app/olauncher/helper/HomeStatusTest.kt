@@ -27,4 +27,21 @@ class HomeStatusTest {
         assertEquals(R.drawable.ic_weather_snow, weatherIconRes(86))
         assertNull(weatherIconRes(42))
     }
+
+    @Test
+    fun `lab ignores the gemma monitor`() {
+        val latest = mapOf("1" to 1, "2" to 1, "7" to 0)
+        assertEquals(HomelabStatus(lab = true, gemma = false), homelabStatus(latest, "7", gemmaConfigured = true))
+        assertEquals(HomelabStatus(lab = false, gemma = null), homelabStatus(latest, null, gemmaConfigured = false))
+    }
+
+    @Test
+    fun `missing gemma monitor counts as down`() {
+        assertEquals(HomelabStatus(lab = true, gemma = false), homelabStatus(mapOf("1" to 1), null, gemmaConfigured = true))
+    }
+
+    @Test
+    fun `empty status page is not ok`() {
+        assertEquals(HomelabStatus(lab = false, gemma = null), homelabStatus(emptyMap(), null, gemmaConfigured = false))
+    }
 }

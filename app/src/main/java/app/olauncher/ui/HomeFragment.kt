@@ -279,6 +279,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             binding.labDot.alpha = 1f
             if (ok == false) labBlink.start()
         }
+        viewModel.gemmaOk.observe(viewLifecycleOwner) { ok ->
+            binding.gemmaStatus.isVisible = ok != null
+            binding.gemmaDot.setTextColor(ContextCompat.getColor(requireContext(), if (ok == true) R.color.lab_ok else R.color.lab_down))
+        }
         // Home button for recents feature disabled
         // viewModel.showRecentApps.observe(viewLifecycleOwner) {
         //     binding.recents.performClick()

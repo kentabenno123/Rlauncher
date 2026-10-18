@@ -161,6 +161,7 @@
     <string name="folder_open" translatable="false">%s ⌄</string>
     <string name="temperature" translatable="false">%d°</string>
     <string name="lab" translatable="false">LAB</string>
+    <string name="gemma" translatable="false">Gemma</string>
     <string name="lab_dot" translatable="false">●</string>
     <string name="link_name" translatable="false">Name</string>
     <string name="invalid_shortcut">Invalid shortcut</string>

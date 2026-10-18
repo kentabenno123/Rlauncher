@@ -29,6 +29,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "KUMA_STATUS_URL", "\"${localProperties.getProperty('rlauncher.kumaStatusUrl', '')}\""
+        buildConfigField "String", "GEMMA_MONITOR", "\"${localProperties.getProperty('rlauncher.gemmaMonitor', '')}\""
         buildConfigField "String", "WEATHER_FALLBACK", "\"${localProperties.getProperty('rlauncher.weatherFallback', '')}\""
     }
 

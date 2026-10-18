@@ -73,15 +73,42 @@ fun weatherIconRes(code: Int): Int? = when (code) {
     else -> null
 }
 
-// True when the newest heartbeat of every monitor on the Uptime Kuma status page is "up"; unreachable counts as not ok
-suspend fun fetchLabOk(statusPageUrl: String): Boolean = withContext(Dispatchers.IO) {
-    runCatching {
-        val apiUrl = statusPageUrl.replace("/status/", "/api/status-page/heartbeat/")
-        val heartbeats = JSONObject(fetchText(apiUrl)).getJSONObject("heartbeatList")
-        val latest = heartbeats.keys().asSequence().mapNotNull { id ->
-            val beats = heartbeats.getJSONArray(id)
-            if (beats.length() > 0) beats.getJSONObject(beats.length() - 1).getInt("status") else null
-        }.toList()
-        latest.isNotEmpty() && latest.all { it == 1 }
-    }.getOrDefault(false)
+// lab: every monitor except Gemma is up; gemma: the Gemma monitor is up, null when none is configured
+data class HomelabStatus(val lab: Boolean, val gemma: Boolean?)
+
+// Uptime Kuma status 1 means "up"
+fun homelabStatus(latestStatusById: Map<String, Int>, gemmaMonitorId: String?, gemmaConfigured: Boolean): HomelabStatus {
+    val others = latestStatusById.filterKeys { it != gemmaMonitorId }.values
+    return HomelabStatus(
+        lab = others.isNotEmpty() && others.all { it == 1 },
+        gemma = if (gemmaConfigured) latestStatusById[gemmaMonitorId] == 1 else null,
+    )
+}
+
+// Reads the Uptime Kuma status page; when it can't be reached, everything counts as not ok
+suspend fun fetchHomelabStatus(statusPageUrl: String, gemmaMonitorName: String): HomelabStatus =
+    withContext(Dispatchers.IO) {
+        val gemmaConfigured = gemmaMonitorName.isNotEmpty()
+        runCatching {
+            val heartbeats = JSONObject(fetchText(statusPageUrl.replace("/status/", "/api/status-page/heartbeat/")))
+                .getJSONObject("heartbeatList")
+            val latest = heartbeats.keys().asSequence().mapNotNull { id ->
+                val beats = heartbeats.getJSONArray(id)
+                if (beats.length() > 0) id to beats.getJSONObject(beats.length() - 1).getInt("status") else null
+            }.toMap()
+            val gemmaId = if (gemmaConfigured) findMonitorId(statusPageUrl, gemmaMonitorName) else null
+            homelabStatus(latest, gemmaId, gemmaConfigured)
+        }.getOrDefault(HomelabStatus(lab = false, gemma = if (gemmaConfigured) false else null))
+    }
+
+private fun findMonitorId(statusPageUrl: String, name: String): String? {
+    val groups = JSONObject(fetchText(statusPageUrl.replace("/status/", "/api/status-page/"))).getJSONArray("publicGroupList")
+    for (g in 0 until groups.length()) {
+        val monitors = groups.getJSONObject(g).getJSONArray("monitorList")
+        for (m in 0 until monitors.length()) {
+            val monitor = monitors.getJSONObject(m)
+            if (monitor.getString("name").equals(name, ignoreCase = true)) return monitor.getInt("id").toString()
+        }
+    }
+    return null
 }

@@ -24,7 +24,7 @@ import app.olauncher.data.Prefs
 import app.olauncher.helper.SingleLiveEvent
 import app.olauncher.helper.WallpaperWorker
 import app.olauncher.helper.Weather
-import app.olauncher.helper.fetchLabOk
+import app.olauncher.helper.fetchHomelabStatus
 import app.olauncher.helper.fetchWeather
 import app.olauncher.helper.formattedTimeSpent
 import app.olauncher.helper.getAppsList
@@ -57,6 +57,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val screenTimeValue = MutableLiveData<String>()
     val weather = MutableLiveData<Weather?>()
     val labOk = MutableLiveData<Boolean?>()
+    val gemmaOk = MutableLiveData<Boolean?>()
     private var weatherFetchedAt = 0L
     private var labFetchedAt = 0L
 
@@ -87,7 +88,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val now = System.currentTimeMillis()
         if (BuildConfig.KUMA_STATUS_URL.isEmpty() || now - labFetchedAt < 60_000) return
         labFetchedAt = now
-        viewModelScope.launch { labOk.value = fetchLabOk(BuildConfig.KUMA_STATUS_URL) }
+        viewModelScope.launch {
+            val status = fetchHomelabStatus(BuildConfig.KUMA_STATUS_URL, BuildConfig.GEMMA_MONITOR)
+            labOk.value = status.lab
+            gemmaOk.value = status.gemma
+        }
     }
 
     fun selectedApp(appModel: AppModel, flag: Int) {
