@@ -8,7 +8,7 @@ import org.junit.Test
 class HomeStatusTest {
     @Test
     fun `fallback coordinates are parsed`() {
-        assertEquals(53.5756 to 10.0438, parseLatLon("53.5756, 10.0438"))
+        assertEquals(52.52 to 13.405, parseLatLon("52.52, 13.405"))
     }
 
     @Test
