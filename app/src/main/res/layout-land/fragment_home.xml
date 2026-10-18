@@ -63,33 +63,18 @@
                 tools:text="Thu, 30 Dec" />
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/weatherLayout"
+        <!-- Weather; the icon is set as a start drawable in code-->
+        <TextView
+            android:id="@+id/weatherTemperature"
+            style="@style/TextDefault"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
-            android:orientation="vertical"
+            android:fontFamily="sans-serif-light"
+            android:textSize="@dimen/time_size"
             android:visibility="gone"
-            tools:visibility="visible">
-
-            <TextView
-                android:id="@+id/weatherTemperature"
-                style="@style/TextDefault"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-light"
-                android:textSize="@dimen/time_size"
-                tools:text="14°" />
-
-            <TextView
-                android:id="@+id/weatherCondition"
-                style="@style/TextDefault"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="3dp"
-                android:textSize="@dimen/date_size"
-                tools:text="Cloudy" />
-        </LinearLayout>
+            tools:text="14°"
+            tools:visibility="visible" />
     </LinearLayout>
 
     <!-- Screen time-->

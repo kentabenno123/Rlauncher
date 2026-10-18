@@ -5,7 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import androidx.annotation.StringRes
+import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import app.olauncher.BuildConfig
 import app.olauncher.R
@@ -60,16 +60,16 @@ fun parseLatLon(value: String): Pair<Double, Double>? =
         ?.let { it[0]!! to it[1]!! }
 
 // WMO weather codes as used by Open-Meteo
-@StringRes
-fun weatherConditionRes(code: Int): Int? = when (code) {
-    0 -> R.string.weather_clear
-    1, 2 -> R.string.weather_partly_cloudy
-    3 -> R.string.weather_cloudy
-    45, 48 -> R.string.weather_fog
-    in 51..57 -> R.string.weather_drizzle
-    in 61..67, in 80..82 -> R.string.weather_rain
-    in 71..77, 85, 86 -> R.string.weather_snow
-    in 95..99 -> R.string.weather_thunderstorm
+@DrawableRes
+fun weatherIconRes(code: Int): Int? = when (code) {
+    0 -> R.drawable.ic_weather_clear
+    1, 2 -> R.drawable.ic_weather_partly_cloudy
+    3 -> R.drawable.ic_weather_cloudy
+    45, 48 -> R.drawable.ic_weather_fog
+    in 51..57 -> R.drawable.ic_weather_drizzle
+    in 61..67, in 80..82 -> R.drawable.ic_weather_rain
+    in 71..77, 85, 86 -> R.drawable.ic_weather_snow
+    in 95..99 -> R.drawable.ic_weather_thunderstorm
     else -> null
 }
 

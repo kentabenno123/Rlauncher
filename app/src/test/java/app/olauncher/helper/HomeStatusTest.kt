@@ -20,11 +20,11 @@ class HomeStatusTest {
     }
 
     @Test
-    fun `weather codes map to conditions`() {
-        assertEquals(R.string.weather_clear, weatherConditionRes(0))
-        assertEquals(R.string.weather_cloudy, weatherConditionRes(3))
-        assertEquals(R.string.weather_rain, weatherConditionRes(81))
-        assertEquals(R.string.weather_snow, weatherConditionRes(86))
-        assertNull(weatherConditionRes(42))
+    fun `weather codes map to icons`() {
+        assertEquals(R.drawable.ic_weather_clear, weatherIconRes(0))
+        assertEquals(R.drawable.ic_weather_cloudy, weatherIconRes(3))
+        assertEquals(R.drawable.ic_weather_rain, weatherIconRes(81))
+        assertEquals(R.drawable.ic_weather_snow, weatherIconRes(86))
+        assertNull(weatherIconRes(42))
     }
 }

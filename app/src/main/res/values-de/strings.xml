@@ -131,14 +131,6 @@
     <string name="folder_add_app">App hinzufügen</string>
     <string name="folder_dissolve">Ordner auflösen</string>
     <string name="folder_remove_app">Aus Ordner entfernen</string>
-    <string name="weather_clear">Klar</string>
-    <string name="weather_partly_cloudy">Leicht bewölkt</string>
-    <string name="weather_cloudy">Bewölkt</string>
-    <string name="weather_fog">Nebel</string>
-    <string name="weather_drizzle">Niesel</string>
-    <string name="weather_rain">Regen</string>
-    <string name="weather_snow">Schnee</string>
-    <string name="weather_thunderstorm">Gewitter</string>
     <string name="invalid_shortcut">Ungültige Verknüpfung</string>
     <string name="shortcut_not_found">Verknüpfung nicht gefunden</string>
     <string name="unable_to_open_shortcut">Verknüpfung kann nicht geöffnet werden</string>

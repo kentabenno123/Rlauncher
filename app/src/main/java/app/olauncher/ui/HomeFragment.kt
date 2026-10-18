@@ -29,6 +29,7 @@ import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
+import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -53,7 +54,7 @@ import app.olauncher.helper.setPlainWallpaperByTheme
 import app.olauncher.helper.showPopupMenu
 import app.olauncher.helper.showTextInputDialog
 import app.olauncher.helper.showToast
-import app.olauncher.helper.weatherConditionRes
+import app.olauncher.helper.weatherIconRes
 import app.olauncher.listener.OnSwipeTouchListener
 import app.olauncher.listener.ViewSwipeTouchListener
 import java.text.SimpleDateFormat
@@ -256,10 +257,15 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             it?.let { binding.tvScreenTime.text = it }
         }
         viewModel.weather.observe(viewLifecycleOwner) { weather ->
-            binding.weatherLayout.isVisible = weather != null
+            val temperature = binding.weatherTemperature
+            temperature.isVisible = weather != null
             if (weather == null) return@observe
-            binding.weatherTemperature.text = getString(R.string.temperature, weather.temperature)
-            binding.weatherCondition.text = weatherConditionRes(weather.code)?.let { getString(it) }.orEmpty()
+            temperature.text = getString(R.string.temperature, weather.temperature)
+            val icon = weatherIconRes(weather.code)?.let { ContextCompat.getDrawable(requireContext(), it) }
+            icon?.setBounds(0, 0, (temperature.textSize * 0.7f).toInt(), (temperature.textSize * 0.7f).toInt())
+            temperature.setCompoundDrawablesRelative(icon, null, null, null)
+            temperature.compoundDrawablePadding = 10.dpToPx()
+            TextViewCompat.setCompoundDrawableTintList(temperature, temperature.textColors)
         }
         viewModel.labOk.observe(viewLifecycleOwner) { ok ->
             binding.labStatus.isVisible = ok != null

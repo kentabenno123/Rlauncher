@@ -58,7 +58,7 @@ A folder sits in a home screen slot like an app. Tap it to expand or collapse it
 
 ## Weather
 
-The current temperature and conditions (e.g. "14°" and "Cloudy") are shown to the right of the clock and date. The data comes from [Open-Meteo](https://open-meteo.com), which needs no API key, and is refreshed at most every 30 minutes.
+The current temperature with a small line icon for the conditions (clear, partly cloudy, cloudy, fog, drizzle, rain, snow, thunderstorm) is shown right-aligned in the clock row. The data comes from [Open-Meteo](https://open-meteo.com), which needs no API key, and is refreshed at most every 30 minutes.
 
 - RLauncher asks once for the approximate location (`ACCESS_COARSE_LOCATION`) and uses the last location the system already knows.
 - If no location is available, it uses the fallback coordinates from `local.properties` (see [Configuration](#configuration)). Without either, no weather is shown.
@@ -109,5 +109,7 @@ Then choose RLauncher under **Settings → Apps → Default apps → Home app**.
 ## Credits & License
 
 RLauncher is based on [Olauncher](https://github.com/tanujnotes/Olauncher) by [tanujnotes](https://github.com/tanujnotes). All other features and the design come from there.
+
+Weather icons: [Lucide](https://lucide.dev), [ISC License](LICENSES/lucide.txt).
 
 License: [GNU GPLv3](LICENSE)
