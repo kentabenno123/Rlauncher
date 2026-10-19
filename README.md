@@ -77,7 +77,7 @@ The status is checked when you return to the home screen and every 30 seconds wh
 
 ## Smart plugs
 
-Up to a few round buttons at the bottom of the home screen switch Tuya / Smart Life plugs on and off, so the Smart Life app isn't needed for that. A filled circle means on, an outline off, and a faded circle means the state isn't known yet. The short label below each circle comes from the configuration.
+Up to a few round buttons at the bottom of the home screen switch Tuya / Smart Life plugs on and off, so the Smart Life app isn't needed for that. Each circle shows a short label, usually one letter. A filled circle means on, an outline off, and a faded circle means the state isn't known yet.
 
 - The buttons switch through the [Tuya cloud API](https://developer.tuya.com), so the plugs can stay in a separate (guest) network and it also works away from home.
 - The state is refreshed when you return to the home screen and every 30 seconds while it stays open. A tap shows the new state right away and reverts it if the cloud refuses.
@@ -104,7 +104,7 @@ rlauncher.tuyaAccessId=your-access-id
 rlauncher.tuyaAccessSecret=your-access-secret
 rlauncher.tuyaRegion=eu
 # Plug buttons as label:deviceId, in display order
-rlauncher.plugs=Lmp:bf0123456789abcdefghij,TV:bf9876543210zyxwvutsrq
+rlauncher.plugs=L:bf0123456789abcdefghij,T:bf9876543210zyxwvutsrq
 # Weather fallback as "latitude,longitude" when no location is available
 rlauncher.weatherFallback=52.5200,13.4050
 ```

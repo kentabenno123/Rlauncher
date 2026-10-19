@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.BatteryManager
@@ -24,6 +25,7 @@ import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.Space
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,6 +33,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
@@ -646,37 +649,45 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun initPlugButtons() {
         binding.plugsLayout.isVisible = viewModel.plugs.isNotEmpty()
-        viewModel.plugs.forEach { plug ->
+        viewModel.plugs.forEachIndexed { index, plug ->
+            // Equal gaps between the circles, first and last sit on the edges
+            if (index > 0) binding.plugsLayout.addView(Space(requireContext()), LinearLayout.LayoutParams(0, 0, 1f))
             val button = TextView(requireContext(), null, 0, R.style.TextSmall).apply {
                 text = plug.label
-                textSize = 11f
+                textSize = 12f
                 gravity = Gravity.CENTER
+                includeFontPadding = false
                 tag = plug
                 contentDescription = plug.label
-                compoundDrawablePadding = 4.dpToPx()
-                setPadding(0, 6.dpToPx(), 0, 6.dpToPx())
+                setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
                 setOnClickListener { viewModel.togglePlug(plug) }
             }
-            binding.plugsLayout.addView(button, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            binding.plugsLayout.addView(button, LinearLayout.LayoutParams(32.dpToPx(), 32.dpToPx()))
         }
     }
 
-    // Filled circle = on, outline = off, faded = state not known yet
+    // Filled circle = on (letter in the contrasting color), outline = off, faded = state not known yet
     private fun showPlugStates(states: Map<String, Boolean>) {
-        binding.plugsLayout.children.forEach { view ->
-            val button = view as TextView
+        binding.plugsLayout.children.filterIsInstance<TextView>().forEach { button ->
             val plug = button.tag as Plug
-            val color = button.currentTextColor
-            val circle = GradientDrawable().apply {
+            val on = states[plug.id] == true
+            val themeColors = textColorsOf(button)
+            val color = themeColors.defaultColor
+            button.background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setSize(22.dpToPx(), 22.dpToPx())
                 setStroke((1.5f * resources.displayMetrics.density).toInt(), color)
-                setColor(if (states[plug.id] == true) color else Color.TRANSPARENT)
+                setColor(if (on) color else Color.TRANSPARENT)
             }
-            button.setCompoundDrawablesWithIntrinsicBounds(null, circle, null, null)
+            val contrast = if (ColorUtils.calculateLuminance(color) > 0.5) Color.BLACK else Color.WHITE
+            button.setTextColor(if (on) ColorStateList.valueOf(contrast) else themeColors)
             button.alpha = if (plug.id in states) 1f else 0.4f
         }
     }
+
+    // The theme's text colors, also after the button showed the contrasting "on" color
+    private fun textColorsOf(button: TextView): ColorStateList =
+        button.getTag(R.id.plugsLayout) as? ColorStateList
+            ?: button.textColors.also { button.setTag(R.id.plugsLayout, it) }
 
     // Lists the folder's apps indented right below the folder entry
     private fun showFolderApps(folderView: TextView, location: Int, apps: List<FolderApp>) {
