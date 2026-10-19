@@ -13,11 +13,17 @@ import android.content.res.Configuration
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RotateDrawable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.DynamicDrawableSpan
+import android.text.style.ImageSpan
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.DragEvent
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -48,6 +54,7 @@ import app.olauncher.R
 import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
 import app.olauncher.data.FolderApp
+import app.olauncher.data.moved
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentHomeBinding
 import app.olauncher.helper.appUsagePermissionGranted
@@ -203,7 +210,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     override fun onLongClick(view: View): Boolean {
         (view.tag as? FolderItem)?.let {
-            showFolderAppMenu(view, it)
+            startFolderAppDrag(view, it)
             return true
         }
         val slot = view.tag?.toString()?.toIntOrNull()
@@ -494,7 +501,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     ): Boolean {
         val location = textView.tag.toString().toInt()
         prefs.getFolder(location)?.let { apps ->
-            textView.text = folderLabel(location, appName)
+            setFolderLabel(textView, location, appName)
             if (location in expandedFolders) showFolderApps(textView, location, apps)
             return true
         }
@@ -624,8 +631,26 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         )
     }
 
-    private fun folderLabel(location: Int, name: String = prefs.getAppName(location)) =
-        getString(if (location in expandedFolders) R.string.folder_open else R.string.folder_closed, name)
+    // Folder name followed by a chevron that points right when closed and turns down when open
+    private fun setFolderLabel(textView: TextView, location: Int, name: String, animate: Boolean = false) {
+        val size = (textView.textSize * 0.6f).toInt()
+        val chevron = RotateDrawable().apply {
+            drawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_chevron)?.mutate()?.apply {
+                setTint(textView.currentTextColor)
+            }
+            toDegrees = 90f
+            setBounds(0, 0, size, size)
+        }
+        val target = if (location in expandedFolders) 10_000 else 0
+        chevron.level = if (animate) 10_000 - target else target
+        val align = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) DynamicDrawableSpan.ALIGN_CENTER
+        else DynamicDrawableSpan.ALIGN_BASELINE
+        textView.text = SpannableStringBuilder(name).append(" ").append("›", ImageSpan(chevron, align), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        if (animate) ObjectAnimator.ofInt(chevron, "level", chevron.level, target).apply {
+            duration = 200
+            addUpdateListener { textView.invalidate() }
+        }.start()
+    }
 
     private fun toggleFolder(location: Int, apps: List<FolderApp>) {
         val layout = binding.homeAppsLayout
@@ -637,7 +662,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             expandedFolders.add(location)
             showFolderApps(folderView, location, apps)
         }
-        folderView.text = folderLabel(location)
+        setFolderLabel(folderView, location, prefs.getAppName(location), animate = true)
     }
 
     // Removes the shown apps of one folder, or of all folders
@@ -718,6 +743,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             val appView = TextView(requireContext(), null, 0, R.style.TextLarge).apply {
                 text = app.label
                 tag = FolderItem(location, index)
+                setOnDragListener(folderAppDragListener)
                 gravity = alignment
                 setPaddingRelative(
                     if (alignment == Gravity.START) indent else 0,
@@ -772,11 +798,51 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         }
     }
 
+    // Still holding when the long press fires: drag onto another app of the same folder to reorder,
+    // or release in place for the menu. Already released (isPressed is cleared on ACTION_UP): menu right away
+    private fun startFolderAppDrag(view: View, item: FolderItem) {
+        val dragging = view.isPressed && view.startDragAndDrop(null, View.DragShadowBuilder(view), item, 0)
+        if (!dragging) showFolderAppMenu(view, item)
+    }
+
+    private val folderAppDragListener = View.OnDragListener { target, event ->
+        val dragged = event.localState as? FolderItem
+        val targetItem = target.tag as? FolderItem
+        if (dragged == null || targetItem == null || dragged.location != targetItem.location) return@OnDragListener false
+        when (event.action) {
+            DragEvent.ACTION_DRAG_ENTERED -> if (targetItem != dragged) target.alpha = 0.4f
+            DragEvent.ACTION_DRAG_EXITED, DragEvent.ACTION_DRAG_ENDED -> target.alpha = 1f
+            DragEvent.ACTION_DROP -> {
+                target.alpha = 1f
+                if (targetItem == dragged) showFolderAppMenu(target, dragged)
+                else prefs.getFolder(dragged.location)?.let { apps ->
+                    prefs.setFolder(dragged.location, apps.moved(dragged.index, targetItem.index))
+                    populateHomeScreen(false)
+                }
+            }
+        }
+        true
+    }
+
     private fun showFolderAppMenu(view: View, item: FolderItem) {
-        view.showPopupMenu(configure = { it.add(R.string.folder_remove_app) }) {
+        view.showPopupMenu(configure = { menu ->
+            menu.add(0, R.string.rename, 0, R.string.rename)
+            menu.add(0, R.string.folder_remove_app, 1, R.string.folder_remove_app)
+        }) { menuItem ->
             val apps = prefs.getFolder(item.location) ?: return@showPopupMenu
-            prefs.setFolder(item.location, apps.filterIndexed { index, _ -> index != item.index })
-            populateHomeScreen(false)
+            val app = apps.getOrNull(item.index) ?: return@showPopupMenu
+            when (menuItem.itemId) {
+                // Only the label shown in the folder changes, the app keeps its own name
+                R.string.rename -> requireContext().showTextInputDialog(R.string.rename, app.label) { label ->
+                    prefs.setFolder(item.location, apps.map { if (it === app) it.copy(label = label) else it })
+                    populateHomeScreen(false)
+                }
+
+                R.string.folder_remove_app -> {
+                    prefs.setFolder(item.location, apps.filterIndexed { index, _ -> index != item.index })
+                    populateHomeScreen(false)
+                }
+            }
         }
     }
 

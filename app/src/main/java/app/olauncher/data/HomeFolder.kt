@@ -18,6 +18,9 @@ fun encodeFolder(apps: List<FolderApp>): String =
         listOf(it.label, it.packageName, it.activityClassName, it.user, it.shortcutId).joinToString(FIELD_SEPARATOR)
     }
 
+// Moves one entry, e.g. a folder app dragged onto another one
+fun <T> List<T>.moved(from: Int, to: Int): List<T> = toMutableList().apply { add(to, removeAt(from)) }
+
 fun decodeFolder(value: String): List<FolderApp> =
     value.split(ENTRY_SEPARATOR).mapNotNull { entry ->
         entry.split(FIELD_SEPARATOR).takeIf { it.size == 5 }?.let { FolderApp(it[0], it[1], it[2], it[3], it[4]) }

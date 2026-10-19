@@ -46,13 +46,15 @@ Uninstalling RLauncher removes all links.
 
 ## Folders
 
-A folder sits in a home screen slot like an app. Tap it to expand or collapse it with a short animation. Its apps appear indented right below it, and the other entries move down. Folders are always closed when you return to the home screen.
+A folder sits in a home screen slot like an app. Tap it to expand or collapse it with a short animation; the chevron after its name turns down while it is open. Its apps appear indented right below it, and the other entries move down. Folders are always closed when you return to the home screen.
 
 | Action | How |
 |---|---|
 | Create a folder | Long-press a home screen slot → **+ New folder** at the top of the list → enter a name |
 | Add an app or link | Long-press the folder → **Add app** → pick it from the list (hidden apps are included) |
-| Remove an app | Expand the folder, long-press the app → **Remove from folder** |
+| Rename an app | Expand the folder, long-press the app and release → **Rename** (only the label in the folder changes, the app keeps its name) |
+| Reorder apps | Expand the folder, keep holding an app until it lifts, then drag it onto another app of the folder |
+| Remove an app | Expand the folder, long-press the app and release → **Remove from folder** |
 | Rename | Long-press the folder → **Rename** |
 | Remove the folder | Long-press the folder → **Remove folder** (the apps stay installed) |
 

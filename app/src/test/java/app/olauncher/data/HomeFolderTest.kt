@@ -21,4 +21,11 @@ class HomeFolderTest {
     fun `broken entries are skipped`() {
         assertEquals(listOf(app), decodeFolder(encodeFolder(listOf(app)) + "\u001Egarbage"))
     }
+
+    @Test
+    fun `entries move down and up`() {
+        assertEquals(listOf("b", "c", "a", "d"), listOf("a", "b", "c", "d").moved(0, 2))
+        assertEquals(listOf("a", "d", "b", "c"), listOf("a", "b", "c", "d").moved(3, 1))
+        assertEquals(listOf("a", "b"), listOf("a", "b").moved(1, 1))
+    }
 }

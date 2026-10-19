@@ -157,8 +157,6 @@
     <string name="folder_add_app">Add app</string>
     <string name="folder_dissolve">Remove folder</string>
     <string name="folder_remove_app">Remove from folder</string>
-    <string name="folder_closed" translatable="false">%s ›</string>
-    <string name="folder_open" translatable="false">%s ⌄</string>
     <string name="temperature" translatable="false">%d°</string>
     <string name="lab" translatable="false">LAB</string>
     <string name="gemma" translatable="false">Gemma</string>
