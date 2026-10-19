@@ -86,7 +86,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun refreshLabStatus() {
         val now = System.currentTimeMillis()
-        if (BuildConfig.KUMA_STATUS_URL.isEmpty() || now - labFetchedAt < 60_000) return
+        if (BuildConfig.KUMA_STATUS_URL.isEmpty() || now - labFetchedAt < 25_000) return
         labFetchedAt = now
         viewModelScope.launch {
             val status = fetchHomelabStatus(BuildConfig.KUMA_STATUS_URL, BuildConfig.GEMMA_MONITOR)

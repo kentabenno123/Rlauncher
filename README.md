@@ -73,7 +73,7 @@ If an [Uptime Kuma](https://github.com/louislam/uptime-kuma) status page is conf
 
 Optionally, a second line above it shows **Gemma** (or any other single service) with a green or red dot, without blinking. It reads one monitor from the same status page by name, and that monitor is left out of the LAB status. This suits services that are often off, like a local LLM on a laptop.
 
-The status is checked each time you return to the home screen, at most once a minute.
+The status is checked when you return to the home screen and every 30 seconds while it stays open.
 
 ## Configuration
 

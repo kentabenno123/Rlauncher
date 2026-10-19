@@ -13,6 +13,8 @@ import android.content.res.Configuration
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -76,6 +78,15 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     private val expandedFolders = mutableSetOf<Int>()
     private lateinit var labBlink: ObjectAnimator
+    private val statusHandler = Handler(Looper.getMainLooper())
+
+    // Keeps LAB and Gemma current while the home screen stays open
+    private val statusRefresh = object : Runnable {
+        override fun run() {
+            viewModel.refreshLabStatus()
+            statusHandler.postDelayed(this, 30_000)
+        }
+    }
     private val locationPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.refreshWeather(force = true) }
 
@@ -115,7 +126,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             locationPermissionRequest.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
         }
         viewModel.refreshWeather()
-        viewModel.refreshLabStatus()
+        statusRefresh.run()
         labBlink.resume()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
@@ -123,6 +134,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     override fun onPause() {
         labBlink.pause() // no blinking while an app is in front
+        statusHandler.removeCallbacks(statusRefresh)
         // Folders are always closed when you come back, without a fade-out on return
         binding.homeAppsLayout.layoutTransition = null
         expandedFolders.clear()
