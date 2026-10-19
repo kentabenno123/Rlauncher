@@ -13,6 +13,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -80,6 +81,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         if (prefs.boldFont) theme.applyStyle(R.style.BoldFontOverlay, true)
         if (isEinkDisplay() || isSystemAnimationsDisabled()) theme.applyStyle(R.style.NoAnimationOverlay, true)
+        // Status bar hidden from the window's first frame, not only once the home screen resumes
+        if (!prefs.showStatusBar) window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

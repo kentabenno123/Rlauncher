@@ -27,7 +27,9 @@ import app.olauncher.data.Constants
 import java.util.Calendar
 import java.util.Locale
 
+// FLAG_FULLSCREEN mirrors the setting so the window keeps it from its first frame (see MainActivity)
 fun Window.showStatusBar() {
+    clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
         insetsController?.show(WindowInsets.Type.statusBars())
     else
@@ -36,6 +38,7 @@ fun Window.showStatusBar() {
 }
 
 fun Window.hideStatusBar() {
+    addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
         insetsController?.hide(WindowInsets.Type.statusBars())
     else
