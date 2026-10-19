@@ -682,7 +682,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         }
     }
 
-    // Filled circle = on (letter in the contrasting color), outline = off, faded = state not known yet
+    // On: filled circle, letter in the contrasting color, full opacity. Off: outline at 50 %. Unknown: outline at 25 %
     private fun showPlugStates(states: Map<String, Boolean>) {
         binding.plugsLayout.children.filterIsInstance<TextView>().forEach { button ->
             val plug = button.tag as Plug
@@ -696,7 +696,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             }
             val contrast = if (ColorUtils.calculateLuminance(color) > 0.5) Color.BLACK else Color.WHITE
             button.setTextColor(if (on) ColorStateList.valueOf(contrast) else themeColors)
-            button.alpha = if (plug.id in states) 1f else 0.4f
+            button.alpha = when (states[plug.id]) {
+                true -> 1f
+                false -> 0.5f
+                null -> 0.25f
+            }
         }
     }
 

@@ -77,7 +77,7 @@ The status is checked when you return to the home screen and every 30 seconds wh
 
 ## Smart plugs
 
-Up to a few round buttons at the bottom of the home screen switch Tuya / Smart Life plugs on and off, so the Smart Life app isn't needed for that. A power button on the far left switches all plugs off at once. Each other circle shows a short label, usually one letter. A filled circle means on, an outline off, and a faded circle means the state isn't known yet.
+Up to a few round buttons at the bottom of the home screen switch Tuya / Smart Life plugs on and off, so the Smart Life app isn't needed for that. A power button on the far left switches all plugs off at once. Each other circle shows a short label, usually one letter. A filled circle means on, an outline at half opacity off, and a very faint outline means the state isn't known yet.
 
 - The buttons switch through the [Tuya cloud API](https://developer.tuya.com), so the plugs can stay in a separate (guest) network and it also works away from home.
 - The state is refreshed when you return to the home screen and every 30 seconds while it stays open. A tap shows the new state right away and reverts it if the cloud refuses.
