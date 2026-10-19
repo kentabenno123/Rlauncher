@@ -39,6 +39,8 @@ import app.olauncher.helper.isPrivateSpaceLocked
 import app.olauncher.helper.parsePlugs
 import app.olauncher.helper.showToast
 import app.olauncher.helper.usageStats.EventLogWrapper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
@@ -120,6 +122,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 plugStates.value = plugStates.value.orEmpty() + (plug.id to !on)
                 appContext.showToast(appContext.getString(R.string.plug_switch_failed))
             }
+        }
+    }
+
+    // Switches every plug off, also those whose state isn't known; failed ones get their old state back
+    fun allPlugsOff() {
+        val before = plugStates.value.orEmpty()
+        plugStates.value = plugs.associate { it.id to false }
+        plugsFetchedAt = System.currentTimeMillis()
+        viewModelScope.launch {
+            val failed = plugs.map { plug -> async { plug.id.takeUnless { TuyaCloud.setSwitch(plug.id, false) } } }
+                .awaitAll()
+                .filterNotNull()
+            if (failed.isEmpty()) return@launch
+            plugStates.value = plugStates.value.orEmpty().filterKeys { it !in failed } + before.filterKeys { it in failed }
+            appContext.showToast(appContext.getString(R.string.plug_switch_failed))
         }
     }
 

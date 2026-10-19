@@ -24,6 +24,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
@@ -649,9 +650,24 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun initPlugButtons() {
         binding.plugsLayout.isVisible = viewModel.plugs.isNotEmpty()
-        viewModel.plugs.forEachIndexed { index, plug ->
+        if (viewModel.plugs.isEmpty()) return
+        // "All off" on the far left: power icon in an outlined circle, in the theme's text color
+        val textColor = TextView(requireContext(), null, 0, R.style.TextSmall).currentTextColor
+        val allOff = ImageView(requireContext()).apply {
+            setImageResource(R.drawable.ic_power)
+            imageTintList = ColorStateList.valueOf(textColor)
+            setPadding(8.dpToPx(), 8.dpToPx(), 8.dpToPx(), 8.dpToPx())
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setStroke((1.5f * resources.displayMetrics.density).toInt(), textColor)
+            }
+            contentDescription = getString(R.string.plugs_all_off)
+            setOnClickListener { viewModel.allPlugsOff() }
+        }
+        binding.plugsLayout.addView(allOff, LinearLayout.LayoutParams(32.dpToPx(), 32.dpToPx()))
+        viewModel.plugs.forEach { plug ->
             // Equal gaps between the circles, first and last sit on the edges
-            if (index > 0) binding.plugsLayout.addView(Space(requireContext()), LinearLayout.LayoutParams(0, 0, 1f))
+            binding.plugsLayout.addView(Space(requireContext()), LinearLayout.LayoutParams(0, 0, 1f))
             val button = TextView(requireContext(), null, 0, R.style.TextSmall).apply {
                 text = plug.label
                 textSize = 12f
