@@ -28,7 +28,9 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -126,6 +128,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             repeatCount = ValueAnimator.INFINITE
         }
         initPlugButtons()
+        view.viewTreeObserver.addOnWindowFocusChangeListener(windowFocusListener)
         initObservers()
         setHomeAlignment(prefs.homeAlignment)
         initSwipeTouchListener()
@@ -918,15 +921,24 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             }
     }
 
+    // A swipe from the top edge only shows the status bar briefly, then it hides again by itself
     private fun hideStatusBar() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-            requireActivity().window.insetsController?.hide(WindowInsets.Type.statusBars())
+            requireActivity().window.insetsController?.apply {
+                systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                hide(WindowInsets.Type.statusBars())
+            }
         else {
             @Suppress("DEPRECATION")
             requireActivity().window.decorView.apply {
-                systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE or View.SYSTEM_UI_FLAG_FULLSCREEN
+                systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN
             }
         }
+    }
+
+    // Hides the status bar again when home gets the focus back, e.g. after the notification shade or a dialog
+    private val windowFocusListener = ViewTreeObserver.OnWindowFocusChangeListener { hasFocus ->
+        if (hasFocus && isResumed && !prefs.showStatusBar) hideStatusBar()
     }
 
     private fun changeAppTheme() {
@@ -1056,6 +1068,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     override fun onDestroyView() {
         labBlink.cancel()
+        binding.root.viewTreeObserver.removeOnWindowFocusChangeListener(windowFocusListener)
         super.onDestroyView()
         _binding = null
     }
