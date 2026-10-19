@@ -3,7 +3,7 @@
 # RLauncher
 
 A minimal Android launcher. It is a fork of [Olauncher](https://github.com/tanujnotes/Olauncher) and stays very close to it.
-Additions: **web links** that behave like apps, **folders** on the home screen, **weather** next to the clock and an optional **homelab status** indicator.
+Additions: **web links** that behave like apps, **folders** on the home screen, **weather** next to the clock, buttons for **smart plugs** and an optional **homelab status** indicator.
 
 ## Links (web shortcuts)
 
@@ -75,6 +75,21 @@ Optionally, a second line above it shows **Gemma** (or any other single service)
 
 The status is checked when you return to the home screen and every 30 seconds while it stays open.
 
+## Smart plugs
+
+Up to a few round buttons at the bottom of the home screen switch Tuya / Smart Life plugs on and off, so the Smart Life app isn't needed for that. A filled circle means on, an outline off, and a faded circle means the state isn't known yet. The short label below each circle comes from the configuration.
+
+- The buttons switch through the [Tuya cloud API](https://developer.tuya.com), so the plugs can stay in a separate (guest) network and it also works away from home.
+- The state is refreshed when you return to the home screen and every 30 seconds while it stays open. A tap shows the new state right away and reverts it if the cloud refuses.
+
+One-time setup:
+
+1. Create a free account on [iot.tuya.com](https://iot.tuya.com) and a cloud project (type "Smart Home", the data center of your Smart Life account, e.g. Central Europe). Authorize *IoT Core*, *Authorization Token Management* and *Smart Home Basic Service*.
+2. In the project, open **Devices → Link Tuya App Account** and scan the QR code with the Smart Life app.
+3. Copy the **Access ID** and **Access Secret** from the project overview and the device ids from **Devices → All Devices** into `local.properties` (see below).
+
+The free plan has to be extended on the Tuya platform every few months, otherwise the buttons stop working.
+
 ## Configuration
 
 Personal settings are read from the git-ignored `local.properties` at build time, so they never end up in the repository:
@@ -84,6 +99,12 @@ Personal settings are read from the git-ignored `local.properties` at build time
 rlauncher.kumaStatusUrl=https://status.example.com/status/home
 # Monitor on that status page shown as its own line above LAB; leave out to hide it
 rlauncher.gemmaMonitor=Gemma
+# Tuya cloud project for the smart plug buttons; region: eu, us, cn or in
+rlauncher.tuyaAccessId=your-access-id
+rlauncher.tuyaAccessSecret=your-access-secret
+rlauncher.tuyaRegion=eu
+# Plug buttons as label:deviceId, in display order
+rlauncher.plugs=Lmp:bf0123456789abcdefghij,TV:bf9876543210zyxwvutsrq
 # Weather fallback as "latitude,longitude" when no location is available
 rlauncher.weatherFallback=52.5200,13.4050
 ```
@@ -92,7 +113,7 @@ Rebuild the APK after changing these values.
 
 ## Differences from Olauncher
 
-- Links in the app list, folders, weather and homelab status (see above)
+- Links in the app list, folders, weather, smart plug buttons and homelab status (see above)
 - App ID `app.rlauncher`, so it can be installed alongside Olauncher
 - The app is called RLauncher
 - **Apps: larger tap area** option (Settings → Home screen, taken from Olauncher CF). When it's on, you can tap anywhere in a home screen entry's row, not just on its label.

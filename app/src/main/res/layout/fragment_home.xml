@@ -234,15 +234,24 @@
         android:text="@string/set_as_default_launcher_u"
         android:visibility="gone" />
 
-    <!-- Homelab status: Gemma above LAB-->
+    <!-- Bottom: smart plug buttons, then Gemma and LAB-->
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="24dp"
+        android:layout_gravity="bottom"
+        android:layout_marginHorizontal="24dp"
         android:layout_marginBottom="32dp"
         android:gravity="end"
         android:orientation="vertical">
+
+        <!-- Filled by HomeFragment, one button per configured plug -->
+        <LinearLayout
+            android:id="@+id/plugsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:visibility="gone" />
 
         <LinearLayout
             android:id="@+id/gemmaStatus"

@@ -30,6 +30,10 @@ android {
 
         buildConfigField "String", "KUMA_STATUS_URL", "\"${localProperties.getProperty('rlauncher.kumaStatusUrl', '')}\""
         buildConfigField "String", "GEMMA_MONITOR", "\"${localProperties.getProperty('rlauncher.gemmaMonitor', '')}\""
+        buildConfigField "String", "TUYA_ACCESS_ID", "\"${localProperties.getProperty('rlauncher.tuyaAccessId', '')}\""
+        buildConfigField "String", "TUYA_ACCESS_SECRET", "\"${localProperties.getProperty('rlauncher.tuyaAccessSecret', '')}\""
+        buildConfigField "String", "TUYA_REGION", "\"${localProperties.getProperty('rlauncher.tuyaRegion', 'eu')}\""
+        buildConfigField "String", "PLUGS", "\"${localProperties.getProperty('rlauncher.plugs', '')}\""
         buildConfigField "String", "WEATHER_FALLBACK", "\"${localProperties.getProperty('rlauncher.weatherFallback', '')}\""
     }
 

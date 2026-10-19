@@ -22,6 +22,8 @@ import app.olauncher.data.Constants
 import app.olauncher.data.FolderApp
 import app.olauncher.data.Prefs
 import app.olauncher.helper.SingleLiveEvent
+import app.olauncher.helper.Plug
+import app.olauncher.helper.TuyaCloud
 import app.olauncher.helper.WallpaperWorker
 import app.olauncher.helper.Weather
 import app.olauncher.helper.fetchHomelabStatus
@@ -34,6 +36,7 @@ import app.olauncher.helper.hasBeenMinutes
 import app.olauncher.helper.isOlauncherDefault
 import app.olauncher.helper.isPackageInstalled
 import app.olauncher.helper.isPrivateSpaceLocked
+import app.olauncher.helper.parsePlugs
 import app.olauncher.helper.showToast
 import app.olauncher.helper.usageStats.EventLogWrapper
 import kotlinx.coroutines.launch
@@ -60,6 +63,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val gemmaOk = MutableLiveData<Boolean?>()
     private var weatherFetchedAt = 0L
     private var labFetchedAt = 0L
+    val plugs: List<Plug> = if (TuyaCloud.configured) parsePlugs(BuildConfig.PLUGS) else emptyList()
+    val plugStates = MutableLiveData<Map<String, Boolean>>(emptyMap())
+    private var plugsFetchedAt = 0L
 
     val privateSpaceApps = MutableLiveData<List<AppModel>?>()
     val privateSpaceLocked = MutableLiveData<Boolean>()
@@ -92,6 +98,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val status = fetchHomelabStatus(BuildConfig.KUMA_STATUS_URL, BuildConfig.GEMMA_MONITOR)
             labOk.value = status.lab
             gemmaOk.value = status.gemma
+        }
+    }
+
+    fun refreshPlugs() {
+        val now = System.currentTimeMillis()
+        if (plugs.isEmpty() || now - plugsFetchedAt < 25_000) return
+        plugsFetchedAt = now
+        viewModelScope.launch {
+            TuyaCloud.fetchStates(plugs.map { it.id })?.let { plugStates.value = it }
+        }
+    }
+
+    // Shows the new state right away and reverts it if the cloud refuses
+    fun togglePlug(plug: Plug) {
+        val on = plugStates.value.orEmpty()[plug.id] != true
+        plugStates.value = plugStates.value.orEmpty() + (plug.id to on)
+        plugsFetchedAt = System.currentTimeMillis() // don't let a refresh overwrite it before the plug reacted
+        viewModelScope.launch {
+            if (!TuyaCloud.setSwitch(plug.id, on)) {
+                plugStates.value = plugStates.value.orEmpty() + (plug.id to !on)
+                appContext.showToast(appContext.getString(R.string.plug_switch_failed))
+            }
         }
     }
 

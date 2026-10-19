@@ -127,6 +127,7 @@
     <string name="add_link">Link hinzufügen</string>
     <string name="extend_home_apps_area">Apps: Größere Klick-Fläche</string>
     <string name="new_folder">Neuer Ordner</string>
+    <string name="plug_switch_failed">Steckdose konnte nicht geschaltet werden</string>
     <string name="new_folder_entry">+ Neuer Ordner</string>
     <string name="folder_add_app">App hinzufügen</string>
     <string name="folder_dissolve">Ordner auflösen</string>

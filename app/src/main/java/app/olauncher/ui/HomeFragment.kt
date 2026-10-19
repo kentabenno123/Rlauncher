@@ -10,6 +10,8 @@ import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
@@ -21,6 +23,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -54,6 +57,7 @@ import app.olauncher.helper.openCalendar
 import app.olauncher.helper.openCameraApp
 import app.olauncher.helper.openDialerApp
 import app.olauncher.helper.setPlainWallpaperByTheme
+import app.olauncher.helper.Plug
 import app.olauncher.helper.showPopupMenu
 import app.olauncher.helper.showTextInputDialog
 import app.olauncher.helper.showToast
@@ -84,6 +88,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private val statusRefresh = object : Runnable {
         override fun run() {
             viewModel.refreshLabStatus()
+            viewModel.refreshPlugs()
             statusHandler.postDelayed(this, 30_000)
         }
     }
@@ -109,6 +114,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             repeatMode = ValueAnimator.REVERSE
             repeatCount = ValueAnimator.INFINITE
         }
+        initPlugButtons()
         initObservers()
         setHomeAlignment(prefs.homeAlignment)
         initSwipeTouchListener()
@@ -291,6 +297,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             binding.labDot.alpha = 1f
             if (ok == false) labBlink.start()
         }
+        viewModel.plugStates.observe(viewLifecycleOwner) { showPlugStates(it) }
         viewModel.gemmaOk.observe(viewLifecycleOwner) { ok ->
             binding.gemmaStatus.isVisible = ok != null
             binding.gemmaDot.setTextColor(ContextCompat.getColor(requireContext(), if (ok == true) R.color.lab_ok else R.color.lab_down))
@@ -635,6 +642,40 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         layout.children.filter { (it.tag as? FolderItem)?.let { item -> location == null || item.location == location } == true }
             .toList()
             .forEach { layout.removeView(it) }
+    }
+
+    private fun initPlugButtons() {
+        binding.plugsLayout.isVisible = viewModel.plugs.isNotEmpty()
+        viewModel.plugs.forEach { plug ->
+            val button = TextView(requireContext(), null, 0, R.style.TextSmall).apply {
+                text = plug.label
+                textSize = 11f
+                gravity = Gravity.CENTER
+                tag = plug
+                contentDescription = plug.label
+                compoundDrawablePadding = 4.dpToPx()
+                setPadding(0, 6.dpToPx(), 0, 6.dpToPx())
+                setOnClickListener { viewModel.togglePlug(plug) }
+            }
+            binding.plugsLayout.addView(button, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        }
+    }
+
+    // Filled circle = on, outline = off, faded = state not known yet
+    private fun showPlugStates(states: Map<String, Boolean>) {
+        binding.plugsLayout.children.forEach { view ->
+            val button = view as TextView
+            val plug = button.tag as Plug
+            val color = button.currentTextColor
+            val circle = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setSize(22.dpToPx(), 22.dpToPx())
+                setStroke((1.5f * resources.displayMetrics.density).toInt(), color)
+                setColor(if (states[plug.id] == true) color else Color.TRANSPARENT)
+            }
+            button.setCompoundDrawablesWithIntrinsicBounds(null, circle, null, null)
+            button.alpha = if (plug.id in states) 1f else 0.4f
+        }
     }
 
     // Lists the folder's apps indented right below the folder entry

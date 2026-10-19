@@ -162,6 +162,7 @@
     <string name="temperature" translatable="false">%d°</string>
     <string name="lab" translatable="false">LAB</string>
     <string name="gemma" translatable="false">Gemma</string>
+    <string name="plug_switch_failed">Could not switch the plug</string>
     <string name="lab_dot" translatable="false">●</string>
     <string name="link_name" translatable="false">Name</string>
     <string name="invalid_shortcut">Invalid shortcut</string>
