@@ -53,6 +53,13 @@
         </activity>
 
         <activity
+            android:name=".LockActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:taskAffinity="app.olauncher.lock" />
+
+        <activity
             android:name=".helper.PinItemActivity"
             android:exported="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar">

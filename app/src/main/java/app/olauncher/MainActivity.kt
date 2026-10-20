@@ -18,6 +18,7 @@ import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -59,6 +60,13 @@ class MainActivity : AppCompatActivity() {
     private var timerJob: Job? = null
     private var isResumed = false
     private var profileReceiver: BroadcastReceiver? = null
+
+    // shortcut: lock screen prototype, only works while the launcher process runs and Android lets it start activities
+    private val screenOffReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            startActivity(Intent(context, LockActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+    }
     private var launcherAppsCallback: LauncherApps.Callback? = null
     private var messageDialog: OlDialog? = null
 
@@ -110,6 +118,7 @@ class MainActivity : AppCompatActivity() {
         viewModel.getAppList()
         registerShortcutCallback()
         setupOrientation()
+        ContextCompat.registerReceiver(this, screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF), ContextCompat.RECEIVER_NOT_EXPORTED)
 
         window.addFlags(FLAG_LAYOUT_NO_LIMITS)
 
@@ -288,6 +297,7 @@ class MainActivity : AppCompatActivity() {
         launcherAppsCallback?.let {
             getSystemService(LauncherApps::class.java).unregisterCallback(it)
         }
+        unregisterReceiver(screenOffReceiver)
         profileReceiver?.let {
             try {
                 unregisterReceiver(it)
