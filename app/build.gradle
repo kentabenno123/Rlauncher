@@ -35,6 +35,7 @@ android {
         buildConfigField "String", "TUYA_REGION", "\"${localProperties.getProperty('rlauncher.tuyaRegion', 'eu')}\""
         buildConfigField "String", "PLUGS", "\"${localProperties.getProperty('rlauncher.plugs', '')}\""
         buildConfigField "String", "WEATHER_FALLBACK", "\"${localProperties.getProperty('rlauncher.weatherFallback', '')}\""
+        buildConfigField "String", "WIREGUARD_TUNNEL", "\"${localProperties.getProperty('rlauncher.wireguardTunnel', '')}\""
     }
 
     buildTypes {

@@ -14,6 +14,10 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RotateDrawable
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.DynamicDrawableSpan
@@ -45,6 +49,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.children
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
@@ -52,6 +57,7 @@ import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import app.olauncher.BuildConfig
 import app.olauncher.MainViewModel
 import app.olauncher.R
 import app.olauncher.data.AppModel
@@ -82,6 +88,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private const val WIREGUARD_PERMISSION = "com.wireguard.android.permission.CONTROL_TUNNELS"
+
 class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener {
 
     private lateinit var prefs: Prefs
@@ -109,6 +117,29 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private val locationPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.refreshWeather(force = true) }
 
+    // shortcut: counts any VPN as the tunnel, WireGuard doesn't share which tunnel is up; fine with a single VPN app
+    private val vpnNetworks = mutableSetOf<Network>()
+    private val vpnCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            statusHandler.post { vpnNetworks.add(network); showVpnState() }
+        }
+
+        override fun onLost(network: Network) {
+            statusHandler.post { vpnNetworks.remove(network); showVpnState() }
+        }
+    }
+
+    // A few seconds after a tap the switch shows the real state again, e.g. when WireGuard ignored the request
+    private val vpnResync = Runnable {
+        if (_binding == null) return@Runnable
+        if (binding.vpnSwitch.isChecked != vpnNetworks.isNotEmpty()) requireContext().showToast(R.string.wireguard_switch_failed)
+        showVpnState()
+    }
+    private val tunnelPermissionRequest =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) setTunnel(binding.vpnSwitch.isChecked) else showVpnState()
+        }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
@@ -129,6 +160,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             repeatCount = ValueAnimator.INFINITE
         }
         initPlugButtons()
+        initVpnSwitch()
         view.viewTreeObserver.addOnWindowFocusChangeListener(windowFocusListener)
         initObservers()
         setHomeAlignment(prefs.homeAlignment)
@@ -711,6 +743,39 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         }
     }
 
+    private fun initVpnSwitch() {
+        binding.vpnLayout.isVisible = BuildConfig.WIREGUARD_TUNNEL.isNotEmpty()
+        if (BuildConfig.WIREGUARD_TUNNEL.isEmpty()) return
+        val request = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+            .build()
+        requireContext().getSystemService(ConnectivityManager::class.java).registerNetworkCallback(request, vpnCallback)
+        // Click instead of a checked listener, so showing the real state doesn't send a request
+        binding.vpnSwitch.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(requireContext(), WIREGUARD_PERMISSION) == PackageManager.PERMISSION_GRANTED)
+                setTunnel(binding.vpnSwitch.isChecked)
+            else tunnelPermissionRequest.launch(WIREGUARD_PERMISSION)
+        }
+    }
+
+    // Needs "Allow remote control apps" in WireGuard's settings, otherwise WireGuard ignores it
+    private fun setTunnel(up: Boolean) {
+        requireContext().sendBroadcast(
+            Intent(if (up) "com.wireguard.android.action.SET_TUNNEL_UP" else "com.wireguard.android.action.SET_TUNNEL_DOWN")
+                .setPackage("com.wireguard.android")
+                .putExtra("tunnel", BuildConfig.WIREGUARD_TUNNEL)
+        )
+        statusHandler.removeCallbacks(vpnResync)
+        statusHandler.postDelayed(vpnResync, 5_000)
+    }
+
+    private fun showVpnState() {
+        if (_binding == null) return
+        binding.vpnSwitch.isChecked = vpnNetworks.isNotEmpty()
+        binding.vpnDot.isInvisible = vpnNetworks.isEmpty()
+    }
+
     // On: filled circle, letter in the contrasting color, full opacity. Off: outline at 50 %. Unknown: outline at 25 %
     private fun showPlugStates(states: Map<String, Boolean>) {
         binding.plugsLayout.children.filterIsInstance<TextView>().forEach { button ->
@@ -1071,6 +1136,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     override fun onDestroyView() {
         labBlink.cancel()
+        statusHandler.removeCallbacks(vpnResync)
+        if (BuildConfig.WIREGUARD_TUNNEL.isNotEmpty())
+            requireContext().getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(vpnCallback)
+        vpnNetworks.clear()
         binding.root.viewTreeObserver.removeOnWindowFocusChangeListener(windowFocusListener)
         super.onDestroyView()
         _binding = null

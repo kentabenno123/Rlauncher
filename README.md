@@ -66,6 +66,14 @@ The current temperature with a small line icon for the conditions (clear, partly
 - If no location is available, it uses the fallback coordinates from `local.properties` (see [Configuration](#configuration)). Without either, no weather is shown.
 - The weather is hidden together with the clock when date and time are turned off.
 
+## WireGuard tunnel
+
+If a tunnel name is configured, a small switch below the temperature turns that tunnel of the [WireGuard app](https://play.google.com/store/apps/details?id=com.wireguard.android) on and off. A green dot next to it lights up while a VPN is up.
+
+- Turn on **Allow remote control apps** in WireGuard's advanced settings, otherwise WireGuard ignores the switch.
+- On the first tap RLauncher asks for WireGuard's permission to control tunnels.
+- The dot shows whether any VPN is up, since WireGuard doesn't tell other apps which tunnel is running.
+
 ## Homelab status
 
 If an [Uptime Kuma](https://github.com/louislam/uptime-kuma) status page is configured, the bottom right corner shows **LAB** with a dot:
@@ -109,6 +117,8 @@ rlauncher.tuyaRegion=eu
 rlauncher.plugs=L:bf0123456789abcdefghij,T:bf9876543210zyxwvutsrq
 # Weather fallback as "latitude,longitude" when no location is available
 rlauncher.weatherFallback=52.5200,13.4050
+# Name of the WireGuard tunnel for the home screen switch; leave out to hide it
+rlauncher.wireguardTunnel=home
 ```
 
 Rebuild the APK after changing these values.

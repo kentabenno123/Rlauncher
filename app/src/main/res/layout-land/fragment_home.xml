@@ -63,18 +63,54 @@
                 tools:text="Thu, 30 Dec" />
         </LinearLayout>
 
-        <!-- Weather; the icon is set as a start drawable in code-->
-        <TextView
-            android:id="@+id/weatherTemperature"
-            style="@style/TextDefault"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
-            android:fontFamily="sans-serif-light"
-            android:textSize="@dimen/time_size"
-            android:visibility="gone"
-            tools:text="14°"
-            tools:visibility="visible" />
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <!-- Weather; the icon is set as a start drawable in code-->
+            <TextView
+                android:id="@+id/weatherTemperature"
+                style="@style/TextDefault"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-light"
+                android:textSize="@dimen/time_size"
+                android:visibility="gone"
+                tools:text="14°"
+                tools:visibility="visible" />
+
+            <!-- WireGuard tunnel switch, the dot lights up while a VPN is up -->
+            <LinearLayout
+                android:id="@+id/vpnLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/vpnDot"
+                    style="@style/TextSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:text="@string/lab_dot"
+                    android:textColor="@color/lab_ok"
+                    android:textSize="10sp"
+                    android:visibility="invisible"
+                    tools:visibility="visible" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/vpnSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/wireguard_tunnel" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Screen time-->

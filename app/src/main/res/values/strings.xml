@@ -163,6 +163,8 @@
     <string name="plug_switch_failed">Could not switch the plug</string>
     <string name="plugs_all_off">All plugs off</string>
     <string name="lab_dot" translatable="false">●</string>
+    <string name="wireguard_tunnel">WireGuard tunnel</string>
+    <string name="wireguard_switch_failed">Tunnel did not switch. Is \"Allow remote control apps\" on in WireGuard?</string>
     <string name="link_name" translatable="false">Name</string>
     <string name="invalid_shortcut">Invalid shortcut</string>
     <string name="shortcut_not_found">Shortcut not found</string>
