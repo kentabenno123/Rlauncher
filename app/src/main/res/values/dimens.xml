@@ -4,4 +4,5 @@
     <dimen name="alphabet_recycler_margin_end">10dp</dimen>
     <dimen name="alphabet_recycler_margin_start">320dp</dimen>
     <dimen name="dialog_blur_behind_radius">4dp</dimen>
+    <dimen name="home_app_text">22sp</dimen>
 </resources>

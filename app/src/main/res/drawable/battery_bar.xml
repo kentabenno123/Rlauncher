@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- White shapes, tinted with the text color by the ProgressBar; the track keeps its 20 % alpha -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape>
+            <solid android:color="#33FFFFFF" />
+        </shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape>
+                <solid android:color="#FFFFFFFF" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>

@@ -58,9 +58,18 @@ A folder sits in a home screen slot like an app. Tap it to expand or collapse it
 | Rename | Long-press the folder → **Rename** |
 | Remove the folder | Long-press the folder → **Remove folder** (the apps stay installed) |
 
+## Home screen layout
+
+The home screen sits on a simple grid with 24dp margins:
+
+- A thin line across the top shows the battery level while the status bar is hidden. It stays below the front camera.
+- The date sits above the clock; tap it to open the calendar.
+- A status row between two hairlines holds **LAB**, **Gemma** and the WireGuard switch. It is hidden when none of them is configured.
+- The home apps fill the space below, the smart plug buttons sit at the bottom from margin to margin.
+
 ## Weather
 
-The current temperature with a small line icon for the conditions (clear, partly cloudy, cloudy, fog, drizzle, rain, snow, thunderstorm) is shown right-aligned in the clock row. The data comes from [Open-Meteo](https://open-meteo.com), which needs no API key, and is refreshed at most every 30 minutes.
+The current temperature with a line icon for the conditions (clear, partly cloudy, cloudy, fog, drizzle, rain, snow, thunderstorm) above it is shown right-aligned in the clock row, on the same baseline as the clock. The data comes from [Open-Meteo](https://open-meteo.com), which needs no API key, and is refreshed at most every 30 minutes.
 
 - RLauncher asks once for the approximate location (`ACCESS_COARSE_LOCATION`) and uses the last location the system already knows.
 - If no location is available, it uses the fallback coordinates from `local.properties` (see [Configuration](#configuration)). Without either, no weather is shown.
@@ -68,7 +77,7 @@ The current temperature with a small line icon for the conditions (clear, partly
 
 ## WireGuard tunnel
 
-If a tunnel name is configured, a small switch below the temperature turns that tunnel of the [WireGuard app](https://play.google.com/store/apps/details?id=com.wireguard.android) on and off. A green dot next to it lights up while a VPN is up.
+If a tunnel name is configured, a small switch on the right of the status row turns that tunnel of the [WireGuard app](https://play.google.com/store/apps/details?id=com.wireguard.android) on and off. The dot next to it is filled green while a VPN is up and an empty ring otherwise.
 
 - Turn on **Allow remote control apps** in WireGuard's advanced settings, otherwise WireGuard ignores the switch.
 - On the first tap RLauncher asks for WireGuard's permission to control tunnels.
@@ -76,12 +85,12 @@ If a tunnel name is configured, a small switch below the temperature turns that 
 
 ## Homelab status
 
-If an [Uptime Kuma](https://github.com/louislam/uptime-kuma) status page is configured, the bottom right corner shows **LAB** with a dot:
+If an [Uptime Kuma](https://github.com/louislam/uptime-kuma) status page is configured, the status row shows **LAB** with a dot:
 
 - green: the latest check of every monitor on the status page is up
 - blinking red: anything else, including when the status page can't be reached
 
-Optionally, a second line above it shows **Gemma** (or any other single service) with a green or red dot, without blinking. It reads one monitor from the same status page by name, and that monitor is left out of the LAB status. This suits services that are often off, like a local LLM on a laptop.
+Optionally, an entry next to it shows **Gemma** (or any other single service) with a green or red dot, without blinking. It reads one monitor from the same status page by name, and that monitor is left out of the LAB status. This suits services that are often off, like a local LLM on a laptop.
 
 The status is checked when you return to the home screen and every 30 seconds while it stays open.
 

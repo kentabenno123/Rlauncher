@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
@@ -23,99 +24,339 @@
         android:layout_height="1dp"
         android:contentDescription="@string/recents_layout_description" /> -->
 
-    <!-- Clock and calendar-->
+    <!-- Everything sits on one grid: 24dp margins, heights in steps of 8dp -->
     <LinearLayout
-        android:id="@+id/dateTimeLayout"
+        android:id="@+id/contentLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginTop="56dp"
-        android:orientation="horizontal"
-        android:visibility="gone"
-        tools:visibility="visible">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="40dp"
+        android:paddingBottom="40dp">
 
+        <!-- Battery level as a thin line across the full width, shown while the status bar is hidden -->
+        <ProgressBar
+            android:id="@+id/batteryBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="@string/battery"
+            android:max="100"
+            android:maxHeight="2dp"
+            android:minHeight="2dp"
+            android:progressBackgroundTint="?attr/primaryColor"
+            android:progressDrawable="@drawable/battery_bar"
+            android:progressTint="?attr/primaryColor"
+            android:visibility="gone"
+            tools:progress="38"
+            tools:visibility="visible" />
+
+        <!-- Date above the clock, weather on the right -->
         <LinearLayout
-            android:id="@+id/clockDateLayout"
-            android:layout_width="wrap_content"
+            android:id="@+id/dateTimeLayout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible">
 
-            <TextClock
-                android:id="@+id/clock"
-                style="@style/TextDefault"
+            <!-- The clock is the baseline the temperature sits on -->
+            <LinearLayout
+                android:id="@+id/clockDateLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-light"
-                android:format12Hour="h:mm"
-                android:textSize="@dimen/time_size"
-                tools:text="02:34" />
+                android:baselineAlignedChildIndex="1"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/date"
-                style="@style/TextDefault"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:format12Hour="EEE, dd MMM"
-                android:format24Hour="EEE, dd MMM"
-                android:paddingHorizontal="3dp"
-                android:textSize="@dimen/date_size"
-                tools:text="Thu, 30 Dec" />
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/date"
+                    style="@style/TextDefault"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.7"
+                    android:gravity="center_vertical"
+                    android:letterSpacing="0.1"
+                    android:minHeight="32dp"
+                    android:textAllCaps="true"
+                    android:textSize="15sp"
+                    tools:text="Di, 20. Okt." />
 
-        <!-- Pushes the weather to the right edge -->
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+                <TextClock
+                    android:id="@+id/clock"
+                    style="@style/TextDefault"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="sans-serif-light"
+                    android:format12Hour="h:mm"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="-0.04"
+                    android:textSize="72sp"
+                    tools:text="21:18" />
+            </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:gravity="end"
-            android:orientation="vertical">
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-            <!-- Weather; the icon is set as a start drawable in code-->
+            <!-- Weather; the icon is set as a top drawable in code-->
             <TextView
                 android:id="@+id/weatherTemperature"
                 style="@style/TextDefault"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
                 android:fontFamily="sans-serif-light"
-                android:textSize="@dimen/time_size"
+                android:gravity="end"
+                android:includeFontPadding="false"
+                android:textSize="40sp"
                 android:visibility="gone"
                 tools:text="14°"
                 tools:visibility="visible" />
+        </LinearLayout>
 
-            <!-- WireGuard tunnel switch, the dot lights up while a VPN is up -->
+        <!-- Status row between two hairlines: LAB, Gemma and the WireGuard switch below the weather -->
+        <LinearLayout
+            android:id="@+id/statusLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:alpha="0.2"
+                android:background="?attr/primaryColor" />
+
             <LinearLayout
-                android:id="@+id/vpnLayout"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/labStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:id="@+id/labDot"
+                        style="@style/TextSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/lab_dot"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        style="@style/TextSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.6"
+                        android:letterSpacing="0.12"
+                        android:text="@string/lab"
+                        android:textAllCaps="true"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/gemmaStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <TextView
+                        android:id="@+id/gemmaDot"
+                        style="@style/TextSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:text="@string/lab_dot"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        style="@style/TextSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.6"
+                        android:letterSpacing="0.12"
+                        android:text="@string/gemma"
+                        android:textAllCaps="true"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- WireGuard tunnel switch, the dot is filled green while a VPN is up -->
+                <LinearLayout
+                    android:id="@+id/vpnLayout"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:gravity="end|center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <View
+                        android:id="@+id/vpnDot"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginEnd="12dp"
+                        android:background="@drawable/vpn_dot_off" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/vpnSwitch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:contentDescription="@string/wireguard_tunnel"
+                        android:thumb="@drawable/vpn_switch_thumb"
+                        app:track="@drawable/vpn_switch_track" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:alpha="0.2"
+                android:background="?attr/primaryColor" />
+        </LinearLayout>
+
+        <!-- Home apps-->
+        <LinearLayout
+            android:id="@+id/homeAppsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:paddingVertical="16dp">
+
+            <TextView
+                android:id="@+id/homeApp1"
+                style="@style/TextLarge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
+                android:focusable="true"
+                android:hint="@string/app"
+                android:paddingVertical="@dimen/home_app_padding_vertical"
+                android:tag="@string/tag_1"
+                android:textSize="@dimen/home_app_text"
                 android:visibility="gone"
-                tools:visibility="visible">
+                tools:visibility="visible" />
 
-                <TextView
-                    android:id="@+id/vpnDot"
-                    style="@style/TextSmall"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
-                    android:text="@string/lab_dot"
-                    android:textColor="@color/lab_ok"
-                    android:textSize="10sp"
-                    android:visibility="invisible"
-                    tools:visibility="visible" />
+            <TextView
+                android:id="@+id/homeApp2"
+                style="@style/TextLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:hint="@string/app"
+                android:paddingVertical="@dimen/home_app_padding_vertical"
+                android:tag="@string/tag_2"
+                android:textSize="@dimen/home_app_text"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/vpnSwitch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/wireguard_tunnel" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/homeApp3"
+                style="@style/TextLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:hint="@string/app"
+                android:paddingVertical="@dimen/home_app_padding_vertical"
+                android:tag="@string/tag_3"
+                android:textSize="@dimen/home_app_text"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/homeApp4"
+                style="@style/TextLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:hint="@string/app"
+                android:paddingVertical="@dimen/home_app_padding_vertical"
+                android:tag="@string/tag_4"
+                android:textSize="@dimen/home_app_text"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/homeApp5"
+                style="@style/TextLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:hint="@string/app"
+                android:paddingVertical="@dimen/home_app_padding_vertical"
+                android:tag="@string/tag_5"
+                android:textSize="@dimen/home_app_text"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/homeApp6"
+                style="@style/TextLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:hint="@string/app"
+                android:paddingVertical="@dimen/home_app_padding_vertical"
+                android:tag="@string/tag_6"
+                android:textSize="@dimen/home_app_text"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/homeApp7"
+                style="@style/TextLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:hint="@string/app"
+                android:paddingVertical="@dimen/home_app_padding_vertical"
+                android:tag="@string/tag_7"
+                android:textSize="@dimen/home_app_text"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/homeApp8"
+                style="@style/TextLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:focusable="true"
+                android:hint="@string/app"
+                android:paddingVertical="@dimen/home_app_padding_vertical"
+                android:tag="@string/tag_8"
+                android:textSize="@dimen/home_app_text"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
         </LinearLayout>
+
+        <!-- Filled by HomeFragment, one button per configured plug; first and last sit on the margins -->
+        <LinearLayout
+            android:id="@+id/plugsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- Screen time-->
@@ -133,115 +374,6 @@
         android:visibility="gone"
         tools:text="2h 11m"
         tools:visibility="visible" />
-
-    <!-- Home apps-->
-    <LinearLayout
-        android:id="@+id/homeAppsLayout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center_vertical"
-        android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="112dp"
-        android:paddingBottom="48dp">
-
-        <TextView
-            android:id="@+id/homeApp1"
-            style="@style/TextLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:hint="@string/app"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
-            android:tag="@string/tag_1"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <TextView
-            android:id="@+id/homeApp2"
-            style="@style/TextLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:hint="@string/app"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
-            android:tag="@string/tag_2"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <TextView
-            android:id="@+id/homeApp3"
-            style="@style/TextLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:hint="@string/app"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
-            android:tag="@string/tag_3"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <TextView
-            android:id="@+id/homeApp4"
-            style="@style/TextLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:hint="@string/app"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
-            android:tag="@string/tag_4"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <TextView
-            android:id="@+id/homeApp5"
-            style="@style/TextLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:hint="@string/app"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
-            android:tag="@string/tag_5"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <TextView
-            android:id="@+id/homeApp6"
-            style="@style/TextLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:hint="@string/app"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
-            android:tag="@string/tag_6"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <TextView
-            android:id="@+id/homeApp7"
-            style="@style/TextLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:hint="@string/app"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
-            android:tag="@string/tag_7"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <TextView
-            android:id="@+id/homeApp8"
-            style="@style/TextLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:hint="@string/app"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
-            android:tag="@string/tag_8"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-    </LinearLayout>
 
     <TextView
         android:id="@+id/firstRunTips"
@@ -269,76 +401,4 @@
         android:maxLines="1"
         android:text="@string/set_as_default_launcher_u"
         android:visibility="gone" />
-
-    <!-- Bottom: smart plug buttons, then Gemma and LAB-->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginHorizontal="24dp"
-        android:layout_marginBottom="32dp"
-        android:gravity="end"
-        android:orientation="vertical">
-
-        <!-- Filled by HomeFragment, one button per configured plug -->
-        <LinearLayout
-            android:id="@+id/plugsLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:orientation="horizontal"
-            android:visibility="gone" />
-
-        <LinearLayout
-            android:id="@+id/gemmaStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <TextView
-                style="@style/TextSmall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/gemma"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/gemmaDot"
-                style="@style/TextSmall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:text="@string/lab_dot"
-                android:textSize="10sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/labStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <TextView
-                style="@style/TextSmall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/lab"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/labDot"
-                style="@style/TextSmall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:text="@string/lab_dot"
-                android:textSize="10sp" />
-        </LinearLayout>
-    </LinearLayout>
 </FrameLayout>

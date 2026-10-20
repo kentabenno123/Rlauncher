@@ -130,6 +130,7 @@
     <string name="plug_switch_failed">Steckdose konnte nicht geschaltet werden</string>
     <string name="plugs_all_off">Alle Steckdosen aus</string>
     <string name="wireguard_tunnel">WireGuard-Tunnel</string>
+    <string name="battery">Akku</string>
     <string name="wireguard_switch_failed">Tunnel nicht umgeschaltet. Ist in WireGuard „Fernsteuerungs-Apps erlauben“ an?</string>
     <string name="new_folder_entry">+ Neuer Ordner</string>
     <string name="folder_add_app">App hinzufügen</string>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 16dp knob inside the 24dp high track: dark on the filled track, grey on the outline -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true">
+        <inset android:inset="4dp">
+            <shape android:shape="oval">
+                <size
+                    android:width="16dp"
+                    android:height="16dp" />
+                <solid android:color="?attr/primaryInverseColor" />
+            </shape>
+        </inset>
+    </item>
+    <item>
+        <inset android:inset="4dp">
+            <shape android:shape="oval">
+                <size
+                    android:width="16dp"
+                    android:height="16dp" />
+                <solid android:color="?attr/primaryColorTrans50" />
+            </shape>
+        </inset>
+    </item>
+</selector>

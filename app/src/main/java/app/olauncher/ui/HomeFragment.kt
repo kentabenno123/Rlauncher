@@ -27,6 +27,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.TypedValue
 import android.view.DragEvent
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -49,8 +50,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.children
-import androidx.core.view.isInvisible
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
 import androidx.core.widget.TextViewCompat
@@ -111,6 +114,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         override fun run() {
             viewModel.refreshLabStatus()
             viewModel.refreshPlugs()
+            showBattery()
             statusHandler.postDelayed(this, 30_000)
         }
     }
@@ -161,6 +165,12 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         }
         initPlugButtons()
         initVpnSwitch()
+        // Keeps the battery line below the front camera when the hidden status bar frees that space
+        ViewCompat.setOnApplyWindowInsetsListener(binding.contentLayout) { content, insets ->
+            val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout()).top
+            content.updatePadding(top = maxOf(40.dpToPx(), cutout + 16.dpToPx()))
+            insets
+        }
         view.viewTreeObserver.addOnWindowFocusChangeListener(windowFocusListener)
         initObservers()
         setHomeAlignment(prefs.homeAlignment)
@@ -332,9 +342,9 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             if (weather == null) return@observe
             temperature.text = getString(R.string.temperature, weather.temperature)
             val icon = weatherIconRes(weather.code)?.let { ContextCompat.getDrawable(requireContext(), it) }
-            icon?.setBounds(0, 0, (temperature.textSize * 0.7f).toInt(), (temperature.textSize * 0.7f).toInt())
-            temperature.setCompoundDrawablesRelative(icon, null, null, null)
-            temperature.compoundDrawablePadding = 10.dpToPx()
+            icon?.setBounds(0, 0, temperature.textSize.toInt(), temperature.textSize.toInt())
+            temperature.setCompoundDrawablesRelative(null, icon, null, null)
+            temperature.compoundDrawablePadding = 8.dpToPx()
             TextViewCompat.setCompoundDrawableTintList(temperature, temperature.textColors)
         }
         viewModel.labOk.observe(viewLifecycleOwner) { ok ->
@@ -343,11 +353,13 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             labBlink.cancel()
             binding.labDot.alpha = 1f
             if (ok == false) labBlink.start()
+            updateStatusRow()
         }
         viewModel.plugStates.observe(viewLifecycleOwner) { showPlugStates(it) }
         viewModel.gemmaOk.observe(viewLifecycleOwner) { ok ->
             binding.gemmaStatus.isVisible = ok != null
             binding.gemmaDot.setTextColor(ContextCompat.getColor(requireContext(), if (ok == true) R.color.lab_ok else R.color.lab_down))
+            updateStatusRow()
         }
         // Home button for recents feature disabled
         // viewModel.showRecentApps.observe(viewLifecycleOwner) {
@@ -422,15 +434,16 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
 //        var dateText = SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(Date())
         val dateFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
-        var dateText = dateFormat.format(Date())
+        binding.date.text = dateFormat.format(Date()).replace(".,", ",")
+        showBattery()
+    }
 
-        if (!prefs.showStatusBar) {
-            val battery = (requireContext().getSystemService(Context.BATTERY_SERVICE) as BatteryManager)
-                .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-            if (battery > 0)
-                dateText = getString(R.string.day_battery, dateText, battery)
-        }
-        binding.date.text = dateText.replace(".,", ",")
+    // The thin line at the top replaces the battery level of the hidden status bar
+    private fun showBattery() {
+        val battery = (requireContext().getSystemService(Context.BATTERY_SERVICE) as BatteryManager)
+            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        binding.batteryBar.isVisible = !prefs.showStatusBar && battery > 0
+        binding.batteryBar.progress = battery
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -725,13 +738,13 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             contentDescription = getString(R.string.plugs_all_off)
             setOnClickListener { viewModel.allPlugsOff() }
         }
-        binding.plugsLayout.addView(allOff, LinearLayout.LayoutParams(32.dpToPx(), 32.dpToPx()))
+        binding.plugsLayout.addView(allOff, LinearLayout.LayoutParams(40.dpToPx(), 40.dpToPx()))
         viewModel.plugs.forEach { plug ->
             // Equal gaps between the circles, first and last sit on the edges
             binding.plugsLayout.addView(Space(requireContext()), LinearLayout.LayoutParams(0, 0, 1f))
             val button = TextView(requireContext(), null, 0, R.style.TextSmall).apply {
                 text = plug.label
-                textSize = 12f
+                textSize = 14f
                 gravity = Gravity.CENTER
                 includeFontPadding = false
                 tag = plug
@@ -739,12 +752,13 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
                 setOnClickListener { viewModel.togglePlug(plug) }
             }
-            binding.plugsLayout.addView(button, LinearLayout.LayoutParams(32.dpToPx(), 32.dpToPx()))
+            binding.plugsLayout.addView(button, LinearLayout.LayoutParams(40.dpToPx(), 40.dpToPx()))
         }
     }
 
     private fun initVpnSwitch() {
         binding.vpnLayout.isVisible = BuildConfig.WIREGUARD_TUNNEL.isNotEmpty()
+        updateStatusRow()
         if (BuildConfig.WIREGUARD_TUNNEL.isEmpty()) return
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
@@ -773,7 +787,12 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private fun showVpnState() {
         if (_binding == null) return
         binding.vpnSwitch.isChecked = vpnNetworks.isNotEmpty()
-        binding.vpnDot.isInvisible = vpnNetworks.isEmpty()
+        binding.vpnDot.setBackgroundResource(if (vpnNetworks.isEmpty()) R.drawable.vpn_dot_off else R.drawable.vpn_dot_on)
+    }
+
+    // The row with its hairlines only shows when LAB, Gemma or the tunnel switch is configured
+    private fun updateStatusRow() {
+        binding.statusLayout.isVisible = binding.labStatus.isVisible || binding.gemmaStatus.isVisible || binding.vpnLayout.isVisible
     }
 
     // On: filled circle, letter in the contrasting color, full opacity. Off: outline at 50 %. Unknown: outline at 25 %
@@ -811,6 +830,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         apps.forEachIndexed { index, app ->
             val appView = TextView(requireContext(), null, 0, R.style.TextLarge).apply {
                 text = app.label
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, folderView.textSize)
                 tag = FolderItem(location, index)
                 setOnDragListener(folderAppDragListener)
                 gravity = alignment
