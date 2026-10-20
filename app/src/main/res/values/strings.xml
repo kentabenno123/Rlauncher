@@ -164,7 +164,7 @@
     <string name="lab_dot" translatable="false">●</string>
     <string name="wireguard_tunnel">WireGuard tunnel</string>
     <string name="battery">Battery</string>
-    <string name="lock_prototype_hint" translatable="false">Lock screen prototype · tap to unlock</string>
+    <string name="lock_prototype_hint" translatable="false">Fingerprint · tap for PIN</string>
     <string name="wireguard_switch_failed">Tunnel did not switch. Is \"Allow remote control apps\" on in WireGuard?</string>
     <string name="link_name" translatable="false">Name</string>
     <string name="invalid_shortcut">Invalid shortcut</string>

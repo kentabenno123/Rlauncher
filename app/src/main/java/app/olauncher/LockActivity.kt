@@ -1,18 +1,24 @@
 package app.olauncher
 
 import android.app.KeyguardManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 
-// Prototype: own screen over the lock screen that asks the system right away to unlock,
-// so on a Pixel only the fingerprint symbol should appear on top of it
+// Prototype: own screen over the lock screen. The Pixel keeps listening for the fingerprint while
+// it is shown, so it unlocks directly; a tap opens the PIN entry as a fallback
 class LockActivity : AppCompatActivity() {
 
-    private var unlockRequested = false
+    private val unlockedReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) = finish()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,29 +26,17 @@ class LockActivity : AppCompatActivity() {
         else @Suppress("DEPRECATION") window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         setContentView(R.layout.activity_lock)
-        // Fallback when the automatic request was cancelled: a tap asks again
-        findViewById<View>(R.id.lockRoot).setOnClickListener { requestUnlock() }
+        findViewById<View>(R.id.lockRoot).setOnClickListener { showPinEntry() }
+        ContextCompat.registerReceiver(this, unlockedReceiver, IntentFilter(Intent.ACTION_USER_PRESENT), ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
+    // Screen turned on again before the phone locked: nothing to show
     override fun onResume() {
         super.onResume()
-        unlockRequested = false
-        window.decorView.post { requestUnlockOnce() }
+        if (!getSystemService(KeyguardManager::class.java).isKeyguardLocked) finish()
     }
 
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) requestUnlockOnce()
-    }
-
-    // Only while the display is on; a request with the screen off would be wasted
-    private fun requestUnlockOnce() {
-        if (unlockRequested || !getSystemService(PowerManager::class.java).isInteractive) return
-        unlockRequested = true
-        requestUnlock()
-    }
-
-    private fun requestUnlock() {
+    private fun showPinEntry() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             finish()
             return
@@ -50,5 +44,10 @@ class LockActivity : AppCompatActivity() {
         getSystemService(KeyguardManager::class.java).requestDismissKeyguard(this, object : KeyguardManager.KeyguardDismissCallback() {
             override fun onDismissSucceeded() = finish()
         })
+    }
+
+    override fun onDestroy() {
+        unregisterReceiver(unlockedReceiver)
+        super.onDestroy()
     }
 }
