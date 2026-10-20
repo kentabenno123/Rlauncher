@@ -1,37 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Prototype: just enough of the home screen design to judge the unlock -->
+<!-- Prototype: the home screen's header, the free space will hold the notifications -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/lockRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
+    android:background="?attr/primaryInverseColor"
     android:orientation="vertical"
     android:paddingHorizontal="24dp"
-    android:paddingTop="80dp"
+    android:paddingTop="40dp"
     android:paddingBottom="40dp">
 
-    <TextClock
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="0.7"
-        android:format12Hour="EEE, d MMM"
-        android:format24Hour="EEE, d MMM"
-        android:letterSpacing="0.1"
-        android:textAllCaps="true"
-        android:textColor="@android:color/white"
-        android:textSize="15sp" />
-
-    <TextClock
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:fontFamily="sans-serif-light"
-        android:format12Hour="h:mm"
-        android:format24Hour="HH:mm"
-        android:includeFontPadding="false"
-        android:letterSpacing="-0.04"
-        android:textColor="@android:color/white"
-        android:textSize="72sp" />
+    <include
+        android:id="@+id/header"
+        layout="@layout/home_header" />
 
     <Space
         android:layout_width="0dp"
@@ -39,6 +20,7 @@
         android:layout_weight="1" />
 
     <TextView
+        style="@style/TextSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -46,6 +28,5 @@
         android:letterSpacing="0.12"
         android:text="@string/lock_prototype_hint"
         android:textAllCaps="true"
-        android:textColor="@android:color/white"
         android:textSize="11sp" />
 </LinearLayout>

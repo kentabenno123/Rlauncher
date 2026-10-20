@@ -47,6 +47,15 @@ import java.util.concurrent.TimeUnit
 
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+    // Shared by the home and the lock screen, so the lock screen shows the last values right away
+    companion object {
+        private val sharedWeather = MutableLiveData<Weather?>()
+        private val sharedLabOk = MutableLiveData<Boolean?>()
+        private val sharedGemmaOk = MutableLiveData<Boolean?>()
+        private var weatherFetchedAt = 0L
+        private var labFetchedAt = 0L
+    }
+
     private val appContext by lazy { application.applicationContext }
     private val prefs = Prefs(appContext)
 
@@ -60,11 +69,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val launcherResetFailed = MutableLiveData<Boolean>()
     val homeAppAlignment = MutableLiveData<Int>()
     val screenTimeValue = MutableLiveData<String>()
-    val weather = MutableLiveData<Weather?>()
-    val labOk = MutableLiveData<Boolean?>()
-    val gemmaOk = MutableLiveData<Boolean?>()
-    private var weatherFetchedAt = 0L
-    private var labFetchedAt = 0L
+    val weather = sharedWeather
+    val labOk = sharedLabOk
+    val gemmaOk = sharedGemmaOk
     val plugs: List<Plug> = if (TuyaCloud.configured) parsePlugs(BuildConfig.PLUGS) else emptyList()
     val plugStates = MutableLiveData<Map<String, Boolean>>(emptyMap())
     private var plugsFetchedAt = 0L

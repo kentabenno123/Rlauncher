@@ -3,7 +3,6 @@ package app.olauncher.ui
 import android.Manifest
 import android.animation.LayoutTransition
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
@@ -14,15 +13,10 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RotateDrawable
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.DynamicDrawableSpan
 import android.text.style.ImageSpan
-import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -50,13 +44,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.children
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.core.view.updatePadding
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
-import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -84,12 +74,8 @@ import app.olauncher.helper.Plug
 import app.olauncher.helper.showPopupMenu
 import app.olauncher.helper.showTextInputDialog
 import app.olauncher.helper.showToast
-import app.olauncher.helper.weatherIconRes
 import app.olauncher.listener.OnSwipeTouchListener
 import app.olauncher.listener.ViewSwipeTouchListener
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 private const val WIREGUARD_PERMISSION = "com.wireguard.android.permission.CONTROL_TUNNELS"
 
@@ -106,42 +92,30 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private data class FolderItem(val location: Int, val index: Int)
 
     private val expandedFolders = mutableSetOf<Int>()
-    private lateinit var labBlink: ObjectAnimator
+    private lateinit var header: HomeHeader
     private val statusHandler = Handler(Looper.getMainLooper())
 
-    // Keeps LAB and Gemma current while the home screen stays open
+    // Keeps LAB, Gemma, the plugs and the battery line current while the home screen stays open
     private val statusRefresh = object : Runnable {
         override fun run() {
             viewModel.refreshLabStatus()
             viewModel.refreshPlugs()
-            showBattery()
+            header.update()
             statusHandler.postDelayed(this, 30_000)
         }
     }
     private val locationPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { viewModel.refreshWeather(force = true) }
 
-    // shortcut: counts any VPN as the tunnel, WireGuard doesn't share which tunnel is up; fine with a single VPN app
-    private val vpnNetworks = mutableSetOf<Network>()
-    private val vpnCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            statusHandler.post { vpnNetworks.add(network); showVpnState() }
-        }
-
-        override fun onLost(network: Network) {
-            statusHandler.post { vpnNetworks.remove(network); showVpnState() }
-        }
-    }
-
     // A few seconds after a tap the switch shows the real state again, e.g. when WireGuard ignored the request
     private val vpnResync = Runnable {
         if (_binding == null) return@Runnable
-        if (binding.vpnSwitch.isChecked != vpnNetworks.isNotEmpty()) requireContext().showToast(R.string.wireguard_switch_failed)
-        showVpnState()
+        if (binding.header.vpnSwitch.isChecked != header.vpnUp) requireContext().showToast(R.string.wireguard_switch_failed)
+        header.showVpnState()
     }
     private val tunnelPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) setTunnel(binding.vpnSwitch.isChecked) else showVpnState()
+            if (granted) setTunnel(binding.header.vpnSwitch.isChecked) else header.showVpnState()
         }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -158,19 +132,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
         deviceManager = context?.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
-        labBlink = ObjectAnimator.ofFloat(binding.labDot, View.ALPHA, 1f, 0.15f).apply {
-            duration = 700
-            repeatMode = ValueAnimator.REVERSE
-            repeatCount = ValueAnimator.INFINITE
-        }
+        header = HomeHeader(binding.header, prefs, viewModel, viewLifecycleOwner)
+        HomeHeader.keepBelowCutout(binding.contentLayout)
         initPlugButtons()
         initVpnSwitch()
-        // Keeps the battery line below the front camera when the hidden status bar frees that space
-        ViewCompat.setOnApplyWindowInsetsListener(binding.contentLayout) { content, insets ->
-            val cutout = insets.getInsets(WindowInsetsCompat.Type.displayCutout()).top
-            content.updatePadding(top = maxOf(40.dpToPx(), cutout + 16.dpToPx()))
-            insets
-        }
         view.viewTreeObserver.addOnWindowFocusChangeListener(windowFocusListener)
         initObservers()
         setHomeAlignment(prefs.homeAlignment)
@@ -190,13 +155,13 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         }
         viewModel.refreshWeather()
         statusRefresh.run()
-        labBlink.resume()
+        header.resume()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
     }
 
     override fun onPause() {
-        labBlink.pause() // no blinking while an app is in front
+        header.pause()
         statusHandler.removeCallbacks(statusRefresh)
         // Folders are always closed when you come back, without a fade-out on return
         binding.homeAppsLayout.layoutTransition = null
@@ -331,36 +296,12 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             setHomeAlignment(it)
         }
         viewModel.toggleDateTime.observe(viewLifecycleOwner) {
-            populateDateTime()
+            header.update()
         }
         viewModel.screenTimeValue.observe(viewLifecycleOwner) {
             it?.let { binding.tvScreenTime.text = it }
         }
-        viewModel.weather.observe(viewLifecycleOwner) { weather ->
-            val temperature = binding.weatherTemperature
-            temperature.isVisible = weather != null
-            if (weather == null) return@observe
-            temperature.text = getString(R.string.temperature, weather.temperature)
-            val icon = weatherIconRes(weather.code)?.let { ContextCompat.getDrawable(requireContext(), it) }
-            icon?.setBounds(0, 0, temperature.textSize.toInt(), temperature.textSize.toInt())
-            temperature.setCompoundDrawablesRelative(null, icon, null, null)
-            temperature.compoundDrawablePadding = 8.dpToPx()
-            TextViewCompat.setCompoundDrawableTintList(temperature, temperature.textColors)
-        }
-        viewModel.labOk.observe(viewLifecycleOwner) { ok ->
-            binding.labStatus.isVisible = ok != null
-            binding.labDot.setTextColor(ContextCompat.getColor(requireContext(), if (ok == true) R.color.lab_ok else R.color.lab_down))
-            labBlink.cancel()
-            binding.labDot.alpha = 1f
-            if (ok == false) labBlink.start()
-            updateStatusRow()
-        }
         viewModel.plugStates.observe(viewLifecycleOwner) { showPlugStates(it) }
-        viewModel.gemmaOk.observe(viewLifecycleOwner) { ok ->
-            binding.gemmaStatus.isVisible = ok != null
-            binding.gemmaDot.setTextColor(ContextCompat.getColor(requireContext(), if (ok == true) R.color.lab_ok else R.color.lab_down))
-            updateStatusRow()
-        }
         // Home button for recents feature disabled
         // viewModel.showRecentApps.observe(viewLifecycleOwner) {
         //     binding.recents.performClick()
@@ -384,10 +325,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         binding.lock.setOnClickListener(this)
         // Home button for recents feature disabled
         // binding.recents.setOnClickListener(this)
-        binding.clock.setOnClickListener(this)
-        binding.date.setOnClickListener(this)
-        binding.clock.setOnLongClickListener(this)
-        binding.date.setOnLongClickListener(this)
+        binding.header.clock.setOnClickListener(this)
+        binding.header.date.setOnClickListener(this)
+        binding.header.clock.setOnLongClickListener(this)
+        binding.header.date.setOnLongClickListener(this)
         binding.setDefaultLauncher.setOnClickListener(this)
         binding.setDefaultLauncher.setOnLongClickListener(this)
         binding.tvScreenTime.setOnClickListener(this)
@@ -415,8 +356,8 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private fun setHomeAlignment(horizontalGravity: Int = prefs.homeAlignment) {
         val verticalGravity = if (prefs.homeBottomAlignment) Gravity.BOTTOM else Gravity.CENTER_VERTICAL
         binding.homeAppsLayout.gravity = horizontalGravity or verticalGravity
-        binding.dateTimeLayout.gravity = horizontalGravity
-        binding.clockDateLayout.gravity = horizontalGravity
+        binding.header.dateTimeLayout.gravity = horizontalGravity
+        binding.header.clockDateLayout.gravity = horizontalGravity
         // Full-width home apps make the whole row tappable, not just the label
         val appWidth = if (prefs.extendHomeAppsArea) ViewGroup.LayoutParams.MATCH_PARENT
         else ViewGroup.LayoutParams.WRAP_CONTENT
@@ -425,25 +366,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 it.gravity = horizontalGravity
                 it.updateLayoutParams { width = appWidth }
             }
-    }
-
-    private fun populateDateTime() {
-        binding.dateTimeLayout.isVisible = prefs.dateTimeVisibility != Constants.DateTime.OFF
-        binding.clock.isVisible = Constants.DateTime.isTimeVisible(prefs.dateTimeVisibility)
-        binding.date.isVisible = Constants.DateTime.isDateVisible(prefs.dateTimeVisibility)
-
-//        var dateText = SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(Date())
-        val dateFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
-        binding.date.text = dateFormat.format(Date()).replace(".,", ",")
-        showBattery()
-    }
-
-    // The thin line at the top replaces the battery level of the hidden status bar
-    private fun showBattery() {
-        val battery = (requireContext().getSystemService(Context.BATTERY_SERVICE) as BatteryManager)
-            .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        binding.batteryBar.isVisible = !prefs.showStatusBar && battery > 0
-        binding.batteryBar.progress = battery
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -476,7 +398,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private fun populateHomeScreen(appCountUpdated: Boolean) {
         if (appCountUpdated) hideHomeApps()
         removeFolderApps()
-        populateDateTime()
+        header.update()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
             populateScreenTime()
@@ -756,19 +678,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         }
     }
 
+    // Click instead of a checked listener, so showing the real state doesn't send a request
     private fun initVpnSwitch() {
-        binding.vpnLayout.isVisible = BuildConfig.WIREGUARD_TUNNEL.isNotEmpty()
-        updateStatusRow()
-        if (BuildConfig.WIREGUARD_TUNNEL.isEmpty()) return
-        val request = NetworkRequest.Builder()
-            .addTransportType(NetworkCapabilities.TRANSPORT_VPN)
-            .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
-            .build()
-        requireContext().getSystemService(ConnectivityManager::class.java).registerNetworkCallback(request, vpnCallback)
-        // Click instead of a checked listener, so showing the real state doesn't send a request
-        binding.vpnSwitch.setOnClickListener {
+        binding.header.vpnSwitch.setOnClickListener {
             if (ContextCompat.checkSelfPermission(requireContext(), WIREGUARD_PERMISSION) == PackageManager.PERMISSION_GRANTED)
-                setTunnel(binding.vpnSwitch.isChecked)
+                setTunnel(binding.header.vpnSwitch.isChecked)
             else tunnelPermissionRequest.launch(WIREGUARD_PERMISSION)
         }
     }
@@ -782,17 +696,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         )
         statusHandler.removeCallbacks(vpnResync)
         statusHandler.postDelayed(vpnResync, 5_000)
-    }
-
-    private fun showVpnState() {
-        if (_binding == null) return
-        binding.vpnSwitch.isChecked = vpnNetworks.isNotEmpty()
-        binding.vpnDot.setBackgroundResource(if (vpnNetworks.isEmpty()) R.drawable.vpn_dot_off else R.drawable.vpn_dot_on)
-    }
-
-    // The row with its hairlines only shows when LAB, Gemma or the tunnel switch is configured
-    private fun updateStatusRow() {
-        binding.statusLayout.isVisible = binding.labStatus.isVisible || binding.gemmaStatus.isVisible || binding.vpnLayout.isVisible
     }
 
     // On: filled circle, letter in the contrasting color, full opacity. Off: outline at 50 %. Unknown: outline at 25 %
@@ -1155,11 +1058,8 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     override fun onDestroyView() {
-        labBlink.cancel()
+        header.destroy()
         statusHandler.removeCallbacks(vpnResync)
-        if (BuildConfig.WIREGUARD_TUNNEL.isNotEmpty())
-            requireContext().getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(vpnCallback)
-        vpnNetworks.clear()
         binding.root.viewTreeObserver.removeOnWindowFocusChangeListener(windowFocusListener)
         super.onDestroyView()
         _binding = null
