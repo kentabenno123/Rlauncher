@@ -40,6 +40,7 @@ class Prefs(context: Context) {
     private val TEXT_SIZE_SCALE = "TEXT_SIZE_SCALE"
     private val BOLD_FONT = "BOLD_FONT"
     private val HIDE_SET_DEFAULT_LAUNCHER = "HIDE_SET_DEFAULT_LAUNCHER"
+    private val HOME_STATUS_HIDDEN = "HOME_STATUS_HIDDEN"
     private val SCREEN_TIME_LAST_UPDATED = "SCREEN_TIME_LAST_UPDATED"
     private val LAUNCHER_RESTART_TIMESTAMP = "LAUNCHER_RECREATE_TIMESTAMP"
     private val SHOWN_ON_DAY_OF_YEAR = "SHOWN_ON_DAY_OF_YEAR"
@@ -234,6 +235,10 @@ class Prefs(context: Context) {
     var hideSetDefaultLauncher: Boolean
         get() = prefs.getBoolean(HIDE_SET_DEFAULT_LAUNCHER, false)
         set(value) = prefs.edit { putBoolean(HIDE_SET_DEFAULT_LAUNCHER, value).apply() }
+
+    var homeStatusHidden: Boolean
+        get() = prefs.getBoolean(HOME_STATUS_HIDDEN, false)
+        set(value) = prefs.edit { putBoolean(HOME_STATUS_HIDDEN, value).apply() }
 
     var screenTimeLastUpdated: Long
         get() = prefs.getLong(SCREEN_TIME_LAST_UPDATED, 0L)

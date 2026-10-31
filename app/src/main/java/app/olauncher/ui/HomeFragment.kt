@@ -9,9 +9,6 @@ import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.content.res.ColorStateList
-import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RotateDrawable
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -32,9 +29,6 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.Space
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,7 +36,6 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
-import androidx.core.graphics.ColorUtils
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
@@ -70,7 +63,6 @@ import app.olauncher.helper.openCalendar
 import app.olauncher.helper.openCameraApp
 import app.olauncher.helper.openDialerApp
 import app.olauncher.helper.setPlainWallpaperByTheme
-import app.olauncher.helper.Plug
 import app.olauncher.helper.showPopupMenu
 import app.olauncher.helper.showTextInputDialog
 import app.olauncher.helper.showToast
@@ -134,7 +126,8 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
         header = HomeHeader(binding.header, prefs, viewModel, viewLifecycleOwner)
         HomeHeader.keepBelowCutout(binding.contentLayout)
-        initPlugButtons()
+        PlugButtons(binding.plugsLayout, viewModel, viewLifecycleOwner)
+        showStatusAndPlugs()
         initVpnSwitch()
         view.viewTreeObserver.addOnWindowFocusChangeListener(windowFocusListener)
         initObservers()
@@ -301,7 +294,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         viewModel.screenTimeValue.observe(viewLifecycleOwner) {
             it?.let { binding.tvScreenTime.text = it }
         }
-        viewModel.plugStates.observe(viewLifecycleOwner) { showPlugStates(it) }
         // Home button for recents feature disabled
         // viewModel.showRecentApps.observe(viewLifecycleOwner) {
         //     binding.recents.performClick()
@@ -644,38 +636,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             .forEach { layout.removeView(it) }
     }
 
-    private fun initPlugButtons() {
-        binding.plugsLayout.isVisible = viewModel.plugs.isNotEmpty()
-        if (viewModel.plugs.isEmpty()) return
-        // "All off" on the far left: power icon in an outlined circle, in the theme's text color
-        val textColor = TextView(requireContext(), null, 0, R.style.TextSmall).currentTextColor
-        val allOff = ImageView(requireContext()).apply {
-            setImageResource(R.drawable.ic_power)
-            imageTintList = ColorStateList.valueOf(textColor)
-            setPadding(8.dpToPx(), 8.dpToPx(), 8.dpToPx(), 8.dpToPx())
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setStroke((1.5f * resources.displayMetrics.density).toInt(), textColor)
-            }
-            contentDescription = getString(R.string.plugs_all_off)
-            setOnClickListener { viewModel.allPlugsOff() }
-        }
-        binding.plugsLayout.addView(allOff, LinearLayout.LayoutParams(40.dpToPx(), 40.dpToPx()))
-        viewModel.plugs.forEach { plug ->
-            // Equal gaps between the circles, first and last sit on the edges
-            binding.plugsLayout.addView(Space(requireContext()), LinearLayout.LayoutParams(0, 0, 1f))
-            val button = TextView(requireContext(), null, 0, R.style.TextSmall).apply {
-                text = plug.label
-                textSize = 14f
-                gravity = Gravity.CENTER
-                includeFontPadding = false
-                tag = plug
-                contentDescription = plug.label
-                setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
-                setOnClickListener { viewModel.togglePlug(plug) }
-            }
-            binding.plugsLayout.addView(button, LinearLayout.LayoutParams(40.dpToPx(), 40.dpToPx()))
-        }
+    // A tap on an empty spot hides or shows the status row and the plug buttons; kept across restarts
+    private fun showStatusAndPlugs() {
+        header.statusHidden = prefs.homeStatusHidden
+        binding.plugsLayout.isVisible = viewModel.plugs.isNotEmpty() && !prefs.homeStatusHidden
     }
 
     // Click instead of a checked listener, so showing the real state doesn't send a request
@@ -697,33 +661,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         statusHandler.removeCallbacks(vpnResync)
         statusHandler.postDelayed(vpnResync, 5_000)
     }
-
-    // On: filled circle, letter in the contrasting color, full opacity. Off: outline at 50 %. Unknown: outline at 25 %
-    private fun showPlugStates(states: Map<String, Boolean>) {
-        binding.plugsLayout.children.filterIsInstance<TextView>().forEach { button ->
-            val plug = button.tag as Plug
-            val on = states[plug.id] == true
-            val themeColors = textColorsOf(button)
-            val color = themeColors.defaultColor
-            button.background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setStroke((1.5f * resources.displayMetrics.density).toInt(), color)
-                setColor(if (on) color else Color.TRANSPARENT)
-            }
-            val contrast = if (ColorUtils.calculateLuminance(color) > 0.5) Color.BLACK else Color.WHITE
-            button.setTextColor(if (on) ColorStateList.valueOf(contrast) else themeColors)
-            button.alpha = when (states[plug.id]) {
-                true -> 1f
-                false -> 0.5f
-                null -> 0.25f
-            }
-        }
-    }
-
-    // The theme's text colors, also after the button showed the contrasting "on" color
-    private fun textColorsOf(button: TextView): ColorStateList =
-        button.getTag(R.id.plugsLayout) as? ColorStateList
-            ?: button.textColors.also { button.setTag(R.id.plugsLayout, it) }
 
     // Lists the folder's apps indented right below the folder entry
     private fun showFolderApps(folderView: TextView, location: Int, apps: List<FolderApp>) {
@@ -1019,6 +956,12 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                     binding.lock.performClick()
                 else
                     lockPhone()
+            }
+
+            override fun onSingleTap() {
+                super.onSingleTap()
+                prefs.homeStatusHidden = !prefs.homeStatusHidden
+                showStatusAndPlugs()
             }
         }
     }

@@ -54,6 +54,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         private val sharedGemmaOk = MutableLiveData<Boolean?>()
         private var weatherFetchedAt = 0L
         private var labFetchedAt = 0L
+        private val sharedPlugStates = MutableLiveData<Map<String, Boolean>>(emptyMap())
+        private var plugsFetchedAt = 0L
     }
 
     private val appContext by lazy { application.applicationContext }
@@ -73,8 +75,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val labOk = sharedLabOk
     val gemmaOk = sharedGemmaOk
     val plugs: List<Plug> = if (TuyaCloud.configured) parsePlugs(BuildConfig.PLUGS) else emptyList()
-    val plugStates = MutableLiveData<Map<String, Boolean>>(emptyMap())
-    private var plugsFetchedAt = 0L
+    val plugStates = sharedPlugStates
 
     val privateSpaceApps = MutableLiveData<List<AppModel>?>()
     val privateSpaceLocked = MutableLiveData<Boolean>()

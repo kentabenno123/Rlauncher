@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.ActivityLockBinding
 import app.olauncher.ui.HomeHeader
+import app.olauncher.ui.PlugButtons
 
 // Prototype: own screen over the lock screen with the home screen's header. The Pixel keeps listening
 // for the fingerprint while it is shown, so it unlocks directly; a tap opens the PIN entry as a fallback
@@ -47,6 +48,7 @@ class LockActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
         header = HomeHeader(binding.header, prefs, viewModel, this)
         HomeHeader.keepBelowCutout(binding.lockRoot)
+        PlugButtons(binding.plugsLayout, viewModel, this)
         // The tunnel is only shown here, switching it needs the unlocked phone
         binding.header.vpnSwitch.isEnabled = false
         binding.header.vpnSwitch.alpha = 0.4f
@@ -65,6 +67,7 @@ class LockActivity : AppCompatActivity() {
         header.resume()
         viewModel.refreshWeather()
         viewModel.refreshLabStatus()
+        viewModel.refreshPlugs()
     }
 
     override fun onPause() {

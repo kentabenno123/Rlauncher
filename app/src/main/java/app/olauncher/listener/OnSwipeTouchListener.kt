@@ -49,6 +49,12 @@ internal open class OnSwipeTouchListener(c: Context?) : OnTouchListener {
             return super.onSingleTapUp(e)
         }
 
+        // Fires only when no second tap follows, so a double tap doesn't also count as a tap
+        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+            onSingleTap()
+            return super.onSingleTapConfirmed(e)
+        }
+
         override fun onDoubleTap(e: MotionEvent): Boolean {
 //            doubleTapOn = true
 //            Timer().schedule(Constants.TRIPLE_TAP_DELAY_MS) {
@@ -106,6 +112,7 @@ internal open class OnSwipeTouchListener(c: Context?) : OnTouchListener {
     open fun onDoubleClick() {}
     open fun onTripleClick() {}
     open fun onClick() {}
+    open fun onSingleTap() {}
 
     init {
         gestureDetector = GestureDetector(c, GestureListener())

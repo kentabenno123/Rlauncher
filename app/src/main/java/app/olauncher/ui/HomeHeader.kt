@@ -60,6 +60,12 @@ class HomeHeader(
 
     val vpnUp get() = vpnNetworks.isNotEmpty()
 
+    var statusHidden = false
+        set(value) {
+            field = value
+            updateStatusRow()
+        }
+
     init {
         viewModel.weather.observe(owner) { weather ->
             val temperature = binding.weatherTemperature
@@ -126,9 +132,10 @@ class HomeHeader(
         vpnNetworks.clear()
     }
 
-    // The row with its hairlines only shows when LAB, Gemma or the tunnel switch is configured
+    // The row with its hairlines only shows when LAB, Gemma or the tunnel switch is configured and it isn't hidden
     private fun updateStatusRow() {
-        binding.statusLayout.isVisible = binding.labStatus.isVisible || binding.gemmaStatus.isVisible || binding.vpnLayout.isVisible
+        binding.statusLayout.isVisible = !statusHidden &&
+                (binding.labStatus.isVisible || binding.gemmaStatus.isVisible || binding.vpnLayout.isVisible)
     }
 
     companion object {
