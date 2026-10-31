@@ -54,6 +54,7 @@ import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentHomeBinding
 import app.olauncher.helper.appUsagePermissionGranted
 import app.olauncher.helper.dpToPx
+import app.olauncher.helper.fadeTo
 import app.olauncher.helper.expandNotificationDrawer
 import app.olauncher.helper.getChangedAppTheme
 import app.olauncher.helper.getUserHandleFromString
@@ -636,10 +637,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             .forEach { layout.removeView(it) }
     }
 
-    // A tap on an empty spot hides or shows the status row and the plug buttons; kept across restarts
-    private fun showStatusAndPlugs() {
-        header.statusHidden = prefs.homeStatusHidden
-        binding.plugsLayout.isVisible = viewModel.plugs.isNotEmpty() && !prefs.homeStatusHidden
+    // A tap on an empty spot fades the status row and the plug buttons out or in; kept across restarts
+    private fun showStatusAndPlugs(animate: Boolean = false) {
+        header.hideStatus(prefs.homeStatusHidden, animate)
+        if (viewModel.plugs.isNotEmpty()) binding.plugsLayout.fadeTo(!prefs.homeStatusHidden, animate)
     }
 
     // Click instead of a checked listener, so showing the real state doesn't send a request
@@ -961,7 +962,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             override fun onSingleTap() {
                 super.onSingleTap()
                 prefs.homeStatusHidden = !prefs.homeStatusHidden
-                showStatusAndPlugs()
+                showStatusAndPlugs(animate = true)
             }
         }
     }

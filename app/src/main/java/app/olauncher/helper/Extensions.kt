@@ -236,3 +236,15 @@ fun Long.hasBeenMinutes(minutes: Int): Boolean =
 fun Int.dpToPx(): Int {
     return (this * Resources.getSystem().displayMetrics.density).toInt()
 }
+
+// Fades a view in or out; hidden it stays INVISIBLE, so it keeps its space and nothing around it moves
+fun View.fadeTo(show: Boolean, animate: Boolean) {
+    animate().cancel()
+    if (!animate) {
+        alpha = if (show) 1f else 0f
+        visibility = if (show) View.VISIBLE else View.INVISIBLE
+    } else if (show) {
+        visibility = View.VISIBLE
+        animate().alpha(1f).setDuration(200)
+    } else animate().alpha(0f).setDuration(200).withEndAction { visibility = View.INVISIBLE }
+}

@@ -66,7 +66,7 @@ The home screen sits on a simple grid with 24dp margins:
 - The date sits above the clock; tap it to open the calendar.
 - A status row between two hairlines holds **LAB**, **Gemma** and the WireGuard switch. It is hidden when none of them is configured.
 - The home apps fill the space below, the smart plug buttons sit at the bottom from margin to margin.
-- A tap on an empty spot hides or shows the status row and the plug buttons; the choice is kept.
+- A tap on an empty spot fades the status row and the plug buttons out or in. The apps stay in place and the choice is kept.
 
 ## Weather
 

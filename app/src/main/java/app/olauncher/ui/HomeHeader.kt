@@ -25,6 +25,7 @@ import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.HomeHeaderBinding
 import app.olauncher.helper.dpToPx
+import app.olauncher.helper.fadeTo
 import app.olauncher.helper.weatherIconRes
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -60,11 +61,12 @@ class HomeHeader(
 
     val vpnUp get() = vpnNetworks.isNotEmpty()
 
-    var statusHidden = false
-        set(value) {
-            field = value
-            updateStatusRow()
-        }
+    private var statusHidden = false
+
+    fun hideStatus(hidden: Boolean, animate: Boolean) {
+        statusHidden = hidden
+        updateStatusRow(animate)
+    }
 
     init {
         viewModel.weather.observe(owner) { weather ->
@@ -132,10 +134,14 @@ class HomeHeader(
         vpnNetworks.clear()
     }
 
-    // The row with its hairlines only shows when LAB, Gemma or the tunnel switch is configured and it isn't hidden
-    private fun updateStatusRow() {
-        binding.statusLayout.isVisible = !statusHidden &&
-                (binding.labStatus.isVisible || binding.gemmaStatus.isVisible || binding.vpnLayout.isVisible)
+    // The row with its hairlines only exists when LAB, Gemma or the tunnel switch is configured;
+    // hidden by the user it keeps its space. Status updates leave a running fade alone
+    private fun updateStatusRow(animate: Boolean = false) {
+        val configured = binding.labStatus.isVisible || binding.gemmaStatus.isVisible || binding.vpnLayout.isVisible
+        when {
+            !configured -> binding.statusLayout.isVisible = false
+            animate || !binding.statusLayout.isVisible -> binding.statusLayout.fadeTo(!statusHidden, animate)
+        }
     }
 
     companion object {
