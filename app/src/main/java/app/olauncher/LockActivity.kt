@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.ActivityLockBinding
+import app.olauncher.helper.fadeTo
 import app.olauncher.ui.HomeHeader
 import app.olauncher.ui.PlugButtons
 
@@ -49,6 +50,8 @@ class LockActivity : AppCompatActivity() {
         header = HomeHeader(binding.header, prefs, viewModel, this)
         HomeHeader.keepBelowCutout(binding.lockRoot)
         PlugButtons(binding.plugsLayout, viewModel, this)
+        // Hidden on the home screen means hidden here too
+        if (viewModel.plugs.isNotEmpty()) binding.plugsLayout.fadeTo(!prefs.homeStatusHidden, false)
         // The tunnel is only shown here, switching it needs the unlocked phone
         binding.header.vpnSwitch.isEnabled = false
         binding.header.vpnSwitch.alpha = 0.4f

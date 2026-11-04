@@ -61,7 +61,8 @@ class HomeHeader(
 
     val vpnUp get() = vpnNetworks.isNotEmpty()
 
-    private var statusHidden = false
+    // Starts from the saved choice, so a new home or lock screen doesn't show the row first
+    private var statusHidden = prefs.homeStatusHidden
 
     fun hideStatus(hidden: Boolean, animate: Boolean) {
         statusHidden = hidden
