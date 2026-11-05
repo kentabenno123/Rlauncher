@@ -18,6 +18,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
+import android.os.Process
 import android.util.TypedValue
 import android.view.DragEvent
 import android.view.Gravity
@@ -60,6 +62,7 @@ import app.olauncher.helper.getChangedAppTheme
 import app.olauncher.helper.getUserHandleFromString
 import app.olauncher.helper.isPackageInstalled
 import app.olauncher.helper.openAlarmApp
+import app.olauncher.helper.openAppInfo
 import app.olauncher.helper.openCalendar
 import app.olauncher.helper.openCameraApp
 import app.olauncher.helper.openDialerApp
@@ -70,6 +73,7 @@ import app.olauncher.helper.showToast
 import app.olauncher.listener.OnSwipeTouchListener
 import app.olauncher.listener.ViewSwipeTouchListener
 
+private const val WIREGUARD_PACKAGE = "com.wireguard.android"
 private const val WIREGUARD_PERMISSION = "com.wireguard.android.permission.CONTROL_TUNNELS"
 
 class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener {
@@ -103,7 +107,14 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     // A few seconds after a tap the switch shows the real state again, e.g. when WireGuard ignored the request
     private val vpnResync = Runnable {
         if (_binding == null) return@Runnable
-        if (binding.header.vpnSwitch.isChecked != header.vpnUp) requireContext().showToast(R.string.wireguard_switch_failed)
+        val context = requireContext()
+        // WireGuard stops its VPN service when switched off and may only start it again from the background
+        // when its battery use is unrestricted, so a second switch-on fails until WireGuard was opened
+        val batteryRestricted = !context.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(WIREGUARD_PACKAGE)
+        if (binding.header.vpnSwitch.isChecked && !header.vpnUp && batteryRestricted) {
+            context.showToast(R.string.wireguard_battery_restricted, Toast.LENGTH_LONG)
+            if (isResumed) openAppInfo(context, Process.myUserHandle(), WIREGUARD_PACKAGE)
+        } else if (binding.header.vpnSwitch.isChecked != header.vpnUp) context.showToast(R.string.wireguard_switch_failed)
         header.showVpnState()
     }
     private val tunnelPermissionRequest =
@@ -656,7 +667,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private fun setTunnel(up: Boolean) {
         requireContext().sendBroadcast(
             Intent(if (up) "com.wireguard.android.action.SET_TUNNEL_UP" else "com.wireguard.android.action.SET_TUNNEL_DOWN")
-                .setPackage("com.wireguard.android")
+                .setPackage(WIREGUARD_PACKAGE)
                 .putExtra("tunnel", BuildConfig.WIREGUARD_TUNNEL)
         )
         statusHandler.removeCallbacks(vpnResync)
