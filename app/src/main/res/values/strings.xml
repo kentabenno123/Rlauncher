@@ -166,6 +166,7 @@
     <string name="battery">Battery</string>
     <string name="lock_prototype_hint" translatable="false">Fingerprint · tap for PIN</string>
     <string name="wireguard_battery_restricted">WireGuard may only start the tunnel in the background with unrestricted battery use. Set WireGuard\'s battery use to \"Unrestricted\".</string>
+    <string name="wireguard_dead_on_wifi">Tunnel switched off: on this Wi-Fi no internet got through it.</string>
     <string name="wireguard_switch_failed">Tunnel did not switch. Is \"Allow remote control apps\" on in WireGuard?</string>
     <string name="link_name" translatable="false">Name</string>
     <string name="invalid_shortcut">Invalid shortcut</string>

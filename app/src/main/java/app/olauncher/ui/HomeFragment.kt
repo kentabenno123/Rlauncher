@@ -44,6 +44,7 @@ import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import app.olauncher.BuildConfig
 import app.olauncher.MainViewModel
@@ -72,9 +73,17 @@ import app.olauncher.helper.showTextInputDialog
 import app.olauncher.helper.showToast
 import app.olauncher.listener.OnSwipeTouchListener
 import app.olauncher.listener.ViewSwipeTouchListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 
 private const val WIREGUARD_PACKAGE = "com.wireguard.android"
 private const val WIREGUARD_PERMISSION = "com.wireguard.android.permission.CONTROL_TUNNELS"
+private const val TUNNEL_PROBE_URL = "https://connectivitycheck.grapheneos.network/generate_204"
 
 class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener {
 
@@ -117,6 +126,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         } else if (binding.header.vpnSwitch.isChecked != header.vpnUp) context.showToast(R.string.wireguard_switch_failed)
         header.showVpnState()
     }
+    private var tunnelProbe: Job? = null
     private val tunnelPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) setTunnel(binding.header.vpnSwitch.isChecked) else header.showVpnState()
@@ -141,6 +151,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         PlugButtons(binding.plugsLayout, viewModel, viewLifecycleOwner)
         showStatusAndPlugs()
         initVpnSwitch()
+        header.onVpnOverWifi = ::switchOffDeadTunnel
         view.viewTreeObserver.addOnWindowFocusChangeListener(windowFocusListener)
         initObservers()
         setHomeAlignment(prefs.homeAlignment)
@@ -661,6 +672,30 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 setTunnel(binding.header.vpnSwitch.isChecked)
             else tunnelPermissionRequest.launch(WIREGUARD_PERMISSION)
         }
+    }
+
+    // A tunnel to a server at home often passes nothing once the phone is on the home Wi-Fi, which leaves the
+    // phone without internet; so after a few seconds on Wi-Fi a test page must come through, else the tunnel goes off.
+    // shortcut: an unreachable test page also counts as a dead tunnel; probe a second server if that ever happens
+    private fun switchOffDeadTunnel() {
+        tunnelProbe?.cancel()
+        tunnelProbe = viewLifecycleOwner.lifecycleScope.launch {
+            delay(10_000)
+            if (!header.vpnUp || passesTraffic()) return@launch
+            binding.header.vpnSwitch.isChecked = false
+            setTunnel(false)
+            requireContext().showToast(R.string.wireguard_dead_on_wifi, Toast.LENGTH_LONG)
+        }
+    }
+
+    // Uses the app's default network, which is the tunnel unless the launcher is excluded from it
+    private suspend fun passesTraffic() = withContext(Dispatchers.IO) {
+        runCatching {
+            val connection = URL(TUNNEL_PROBE_URL).openConnection() as HttpURLConnection
+            connection.connectTimeout = 10_000
+            connection.readTimeout = 10_000
+            try { connection.responseCode == 204 } finally { connection.disconnect() }
+        }.getOrDefault(false)
     }
 
     // Needs "Allow remote control apps" in WireGuard's settings, otherwise WireGuard ignores it

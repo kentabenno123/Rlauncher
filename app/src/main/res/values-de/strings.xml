@@ -132,6 +132,7 @@
     <string name="wireguard_tunnel">WireGuard-Tunnel</string>
     <string name="battery">Akku</string>
     <string name="wireguard_battery_restricted">WireGuard darf den Tunnel im Hintergrund nur ohne Akku-Einschränkung starten. Stell die Akkunutzung von WireGuard auf „Nicht eingeschränkt“.</string>
+    <string name="wireguard_dead_on_wifi">Tunnel ausgeschaltet: In diesem WLAN kam durch ihn kein Internet an.</string>
     <string name="wireguard_switch_failed">Tunnel nicht umgeschaltet. Ist in WireGuard „Fernsteuerungs-Apps erlauben“ an?</string>
     <string name="new_folder_entry">+ Neuer Ordner</string>
     <string name="folder_add_app">App hinzufügen</string>

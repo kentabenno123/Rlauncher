@@ -49,13 +49,26 @@ class HomeHeader(
 
     // shortcut: counts any VPN as the tunnel, WireGuard doesn't share which tunnel is up; fine with a single VPN app
     private val vpnNetworks = mutableSetOf<Network>()
+    private var vpnOverWifi = false
+
+    // Called once each time the tunnel starts running over Wi-Fi, e.g. after coming home on mobile data
+    var onVpnOverWifi: (() -> Unit)? = null
     private val vpnCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
             handler.post { vpnNetworks.add(network); showVpnState() }
         }
 
+        // A VPN carries the transports of the network below it
+        override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
+            val wifi = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+            handler.post {
+                if (wifi && !vpnOverWifi) onVpnOverWifi?.invoke()
+                vpnOverWifi = wifi
+            }
+        }
+
         override fun onLost(network: Network) {
-            handler.post { vpnNetworks.remove(network); showVpnState() }
+            handler.post { vpnNetworks.remove(network); vpnOverWifi = false; showVpnState() }
         }
     }
 
