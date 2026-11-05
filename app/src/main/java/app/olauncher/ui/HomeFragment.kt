@@ -681,7 +681,8 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         tunnelProbe?.cancel()
         tunnelProbe = viewLifecycleOwner.lifecycleScope.launch {
             delay(10_000)
-            if (!header.vpnUp || passesTraffic()) return@launch
+            // A failed test while the launcher itself is cut off says nothing about the tunnel
+            if (passesTraffic() || !header.vpnUsableOnWifi) return@launch
             binding.header.vpnSwitch.isChecked = false
             setTunnel(false)
             requireContext().showToast(R.string.wireguard_dead_on_wifi, Toast.LENGTH_LONG)

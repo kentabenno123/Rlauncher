@@ -49,10 +49,21 @@ class HomeHeader(
 
     // shortcut: counts any VPN as the tunnel, WireGuard doesn't share which tunnel is up; fine with a single VPN app
     private val vpnNetworks = mutableSetOf<Network>()
-    private var vpnOverWifi = false
+    private var vpnWifi = false
+    private var vpnBlocked = false // the launcher's own access, cut off e.g. while the phone dozes
 
-    // Called once each time the tunnel starts running over Wi-Fi, e.g. after coming home on mobile data
+    val vpnUsableOnWifi get() = vpnWifi && !vpnBlocked
+
+    // Called each time the tunnel becomes usable over Wi-Fi, e.g. after coming home on mobile data
     var onVpnOverWifi: (() -> Unit)? = null
+
+    private fun updateVpnWifi(wifi: Boolean = vpnWifi, blocked: Boolean = vpnBlocked) {
+        val wasUsable = vpnUsableOnWifi
+        vpnWifi = wifi
+        vpnBlocked = blocked
+        if (vpnUsableOnWifi && !wasUsable) onVpnOverWifi?.invoke()
+    }
+
     private val vpnCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
             handler.post { vpnNetworks.add(network); showVpnState() }
@@ -61,14 +72,16 @@ class HomeHeader(
         // A VPN carries the transports of the network below it
         override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
             val wifi = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
-            handler.post {
-                if (wifi && !vpnOverWifi) onVpnOverWifi?.invoke()
-                vpnOverWifi = wifi
-            }
+            handler.post { updateVpnWifi(wifi = wifi) }
+        }
+
+        // Only called from Android 10 on; before that the tunnel counts as never blocked
+        override fun onBlockedStatusChanged(network: Network, blocked: Boolean) {
+            handler.post { updateVpnWifi(blocked = blocked) }
         }
 
         override fun onLost(network: Network) {
-            handler.post { vpnNetworks.remove(network); vpnOverWifi = false; showVpnState() }
+            handler.post { vpnNetworks.remove(network); updateVpnWifi(wifi = false, blocked = false); showVpnState() }
         }
     }
 
